@@ -1,0 +1,8 @@
+org.opennms.mock.snmp.MockSnmpAgentIT
+org.opennms.netmgt.alarmd.AlarmLifecycleListenerManagerIT
+org.opennms.netmgt.alarmd.northbounder.drools.DroolsNorthbounderIT
+org.opennms.netmgt.config.SnmpEncryptionIT
+org.opennms.netmgt.poller.monitors.HttpMonitorIT
+org.opennms.netmgt.provision.service.NewSuspectScanIT
+org.opennms.netmgt.provision.service.NodeLocationChangeIT
+org.opennms.web.svclayer.support.DefaultSchedulerServiceIT

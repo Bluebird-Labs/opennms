@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set +e
+trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 POMFILE="$1"; shift
 
@@ -9,21 +11,6 @@ if [ -z "${POMFILE}" ]; then
 fi
 
 MYDIR="$(cd "$(dirname "$0")" || exit 1; pwd)"
-
-set +e
-
-XMLLINT="$(command -v xmllint || :)"
-PYTHON="$(command -v python || command -v python2 || command -v python3 || :)"
-
-# try xmllint first, we can xpath it
-if [ -n "${XMLLINT}" ] && [ -x "${XMLLINT}" ]; then
-  exec "${XMLLINT}" --xpath '/*[local-name()="project"]/*[local-name()="version"]/text()' "${POMFILE}"
-fi
-
-# fall back to python XML parsing
-if [ -n "${PYTHON}" ] && [ -x "${PYTHON}" ]; then
-  "${PYTHON}" "${MYDIR}/pom2version.py" "${POMFILE}" 2>/dev/null && exit 0
-fi
 
 # last resort, parse with shell
 sed '/<parent>/,/<\/parent>/d' < "${POMFILE}" > "/tmp/$$.pom"

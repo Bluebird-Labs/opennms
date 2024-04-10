@@ -1,195 +1,426 @@
+---
 version: 2.1
 
-orbs:
-  continuation: circleci/continuation@0.3.1
-  # path-filtering: circleci/path-filtering@0.1.3
-
-parameters:
-  trigger-prebuild:
-    description: whether to trigger a pre-build evaluation
-    type: boolean
-    default: true
-  trigger-coverage-api:
-    description: whether to trigger a code coverage build
-    type: boolean
-    default: false
-  trigger-automation:
-    description: whether to trigger garbage collection for older feature images
-    type: boolean
-    default: false
-  is_pr:
-    description: whether this build is a pull request (only valid in non-setup workflows)
-    type: boolean
-    default: false
-
-setup: true
-
 commands:
-  setup-github:
-     description: "Set Up Github SSH Access"
-     steps:
-        - run:
-            command: |
-              install -d -m 700 ~/.ssh
-              ssh-keyscan github.com >> ~/.ssh/known_hosts
-              ssh-keyscan -p 443 ssh.github.com >> ~/.ssh/known_hosts
-              chmod 600 ~/.ssh/known_hosts
-  shallow-clone:
-      description: "Quick shallow checkout (if possible)"
-      steps:
-        - setup-github
-        - run:
-            name: git clone
-            command: |
-              git clone --no-checkout --filter=tree:0 "${CIRCLE_REPOSITORY_URL}" .
-              if [ -n "${CIRCLE_TAG}" ]; then
-                git checkout --force "${CIRCLE_TAG}"
-                git reset --hard "${CIRCLE_SHA1}"
-              else
-                git checkout --force -B "${CIRCLE_BRANCH}" "${CIRCLE_SHA1}"
-              fi
-  verify-config:
-    description: "Verify generated main.yml file"
+  environment:
+    description: "Set environment"
     steps:
       - run:
-          name: Verify Dynamic Config
+          name: Setup environment variables
           command: |
-            CIRCLE_BIN_DIR="$HOME/.local/bin"
-            mkdir -p "$CIRCLE_BIN_DIR"
-            export PATH="$CIRCLE_BIN_DIR:$PATH"
-            export CIRCLECI_CLI_TELEMETRY_OPTOUT=1
-            curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="$CIRCLE_BIN_DIR" bash
-            "$CIRCLE_BIN_DIR/circleci" version
-            "$CIRCLE_BIN_DIR/circleci" config validate --skip-update-check /tmp/.circleci/main.yml || exit 1
+            echo 'export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"' >> "${BASH_ENV}"
+            echo 'export M2_HOME="/opt/maven"' >> "${BASH_ENV}"
+            echo 'export PATH="${M2_HOME}/bin:${PATH}"' >> "${BASH_ENV}"
+      - run:
+          name: "Clean running docker containers, images and volumes"
+          command: |
+            docker rm $(docker ps -aq) || :
+            docker system prune --force --all --volumes
+  cached-checkout:
+    description: "Git: Checkout with caching"
+    steps:
+      - restore_cache:
+          keys:
+            - source-v2-{{ .Branch }}-{{ .Revision }}
+            - source-v2-{{ .Branch }}-
+      - checkout
+      - run:
+          name: "Git: fetch origin"
+          command: |
+            git remote prune origin || :
+            git fetch origin
+  save-cached-checkout:
+    description: "Git: Save cache"
+    steps:
+      - save_cache:
+          key: source-v2-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
+  system-info:
+    description: "Gather system information"
+    steps:
+      - run:
+          name: Gather system information
+          command: |
+            .circleci/scripts/system-info.sh
+  extract-pom-version:
+    description: "Extract version from main pom.xml"
+    steps:
+      - run:
+          name: Extract Maven POM version
+          command: .circleci/scripts/pom2version.sh pom.xml > pom-version-cache.key
+  save-maven-cache:
+    description: "Maven: Save cache"
+    steps:
+      - run:
+          name: "Maven: Remove old artifacts to keep workspace size down"
+          command: .circleci/scripts/clean-m2.sh
+      - run:
+          name: "Maven: Remove Extra Maven Repository OpenNMS Files"
+          command: |
+            mv /data/circleci-runner/m2/repository/org/opennms /data/circleci-runner/m2.temp
+      - save_cache:
+          key: maven-dependencies-v3-{{ checksum "pom-version-cache.key" }}-{{ checksum "maven-dependency-pom-cache.key" }}
+          paths:
+            - /data/circleci-runner/m2
+      - run:
+          name: "Maven: Restore Extra Maven Repository OpenNMS Files"
+          command: |
+            # now move them back so they end up in the workspace for builds further down the workflow
+            mv /data/circleci-runner/m2.temp /data/circleci-runner/m2/repository/org/opennms
+  restore-maven-cache:
+    description: "Maven: Calculate cache key and restore cache"
+    steps:
+      - run:
+          name: "Maven: Calculate cache key from pom files"
+          command: find . -type f -name "pom.xml" | grep -v /target/ | sort -u | xargs cat > maven-dependency-pom-cache.key
+      - restore_cache:
+          keys:
+            - maven-dependencies-v3-{{ checksum "pom-version-cache.key" }}-{{ checksum "maven-dependency-pom-cache.key" }}
+            - maven-dependencies-v3-{{ checksum "pom-version-cache.key" }}-
+  save-nodejs-cache:
+    description: "NodeJS: Save cache"
+    steps:
+      - run:
+          name: "NodeJS: Clean up cache tmp directory"
+          command: rm -rf ~/.npm/_cacache/tmp
+      - save_cache:
+          key: nodejs-dependencies-v1-{{ checksum "pom-version-cache.key" }}-{{ checksum "nodejs-dependency-json-cache.key" }}
+          paths:
+            - ~/.npm
+  restore-nodejs-cache:
+    description: "NodeJS: Calculate cache key and restore cache"
+    steps:
+      - run:
+          name: "NodeJS: Calculate cache key"
+          command: find core/web-assets -name package\*.json -o -name bower.json | grep -v /target/ | sort -u | xargs cat > nodejs-dependency-json-cache.key
+      - restore_cache:
+          keys:
+            - nodejs-dependencies-v1-{{ checksum "pom-version-cache.key" }}-{{ checksum "nodejs-dependency-json-cache.key" }}
+            - nodejs-dependencies-v1-{{ checksum "pom-version-cache.key" }}-
+  collect-results:
+    description: "Collect test results, logs and build artifacts"
+    steps:
+      - run:
+          name: Collect assemble artifacts
+          when: always
+          command: |
+            make collect-artifacts
+      - run:
+          name: Collect test results
+          when: always
+          command: |
+            make collect-testresults
+            echo "Move failsafe summary report to parent directory, it fails when it get's uploaded as a test result"
+            find . -type f -regex ".*\/target\/artifacts\/failsafe-reports\/failsafe-summary\.xml" -exec mv {} target/artifacts \;
+      - store_test_results:
+          path: target/artifacts/surefire-reports
+      - store_test_results:
+          path: target/artifacts/failsafe-reports
+      - run:
+          name: Compress test results for upload as artifacts
+          when: always
+          command: |
+            find . -type f -regex ".*\/target\/artifacts\/surefire-reports\/.*\.xml" > testResultFiles.txt
+            find . -type f -regex ".*\/target\/artifacts\/failsafe-reports\/.*\.xml" >> testResultFiles.txt
+            tar cjf target/artifacts/testResultsArchive.tar.bz2 -T testResultFiles.txt
+            rm -rf target/artifacts/surefire-reports target/artifacts/failsafe-reports testResultFiles.txt
+      - store_artifacts:
+          path: target/artifacts
+          destination: artifacts
+  clean-system:
+    description: "Clean build system"
+    steps:
+      - run:
+          name: "Remove build environment"
+          when: always
+          command: |
+            docker stop buildx_buildkit_opennms-build-env-oci0
+            docker rm buildx_buildkit_opennms-build-env-oci0
+            docker volume rm buildx_buildkit_opennms-build-env-oci0_state
+      - run:
+          name: "Clean: Docker environment"
+          when: always
+          command: |
+            make destroy-postgres
+            docker system prune --force --all --volumes
+      - run:
+          name: "Clean: Maven repository"
+          when: always
+          command: rm -rf ~/.m2/*
+      - run:
+          name: "Clean: NodeJS cache"
+          when: always
+          command: rm -rf ~/.npm/*
 
 workflows:
-  coverage:
-    when:
-      and:
-        - equal: [ true, << pipeline.parameters.trigger-coverage-api >> ]
-        - equal: [ false, << pipeline.parameters.trigger-prebuild >> ]
-        - equal: [ false, << pipeline.parameters.trigger-automation >> ]
+  build-workflow:
     jobs:
-      - trigger-path-filtering:
-          base-revision: << pipeline.git.branch >>
-          mapping: |
-            .*                trigger-coverage true
-
-  pre-build:
-    when:
-      and:
-        - equal: [ false, << pipeline.parameters.trigger-coverage-api >> ]
-        - equal: [ true, << pipeline.parameters.trigger-prebuild >> ]
-        - equal: [ false, << pipeline.parameters.trigger-automation >> ]
-    jobs:
-      - trigger-path-filtering:
-          base-revision: << pipeline.git.branch >>
-          mapping: |
-            ((?!docs/).)*     trigger-build       true
-            docs/.*           trigger-docs        true
-            ui/.*             trigger-ui          true
-            .circleci/.*      trigger-build       true
-            .circleci/main/jobs/build/build-docs.yml trigger-docs        true
-            .circleci/main/jobs/build/build-ui.yml trigger-ui        true
-            antora-playbook-local.yml      trigger-docs        true
-            Makefile                       trigger-docs        true
-
-  automation:
-    when:
-      and:
-        - equal: [ false, << pipeline.parameters.trigger-coverage-api >> ]
-        - equal: [ false, << pipeline.parameters.trigger-prebuild >> ]
-        - equal: [ true, << pipeline.parameters.trigger-automation >> ]
-    jobs:
-      - docker_gc:
-          context:
-            - "CircleCI"
-            - "docker-publish-account"
+      - smoke-build
+      - expensive-build:
+          context: SonarCloud
+          requires:
+            - smoke-build
+      - unit-tests:
+          context: SonarCloud
+          requires:
+            - smoke-build
+      - integration-tests:
+          context: SonarCloud
+          requires:
+            - smoke-build
+      - smoke-tests-core:
+          context: SonarCloud
+          requires:
+            - smoke-build
+      - smoke-tests-minion:
+          context: SonarCloud
+          requires:
+            - smoke-build
+      - smoke-tests-sentinel:
+          context: SonarCloud
+          requires:
+            - smoke-build
 jobs:
-  docker_gc:
-    docker:
-      - image: docker
+  smoke-build:
+    machine: true
+    resource_class: bluebird-labs/c7g2xlarge
     steps:
+      - cached-checkout
+      - save-cached-checkout
+      - environment
+      - system-info
+      - extract-pom-version
+      - restore-maven-cache
+      - restore-nodejs-cache
       - run:
-          name:  Docker GC - remove inactive images on feature branches
-          # TODO replace expect when https://github.com/docker/hub-tool/pull/198 is merged
+          name: Cleaning project for quick validation
           command: |
-            wget https://github.com/docker/hub-tool/releases/download/v0.4.5/hub-tool-linux-amd64.tar.gz
-            tar -xzf hub-tool-linux-amd64.tar.gz
-            cd hub-tool
-            DOCKERHUB_AUTH_HASH="$(echo -n "${DOCKERHUB_LOGIN}:${DOCKERHUB_PASS}" | base64)"
-            echo "{ \"auths\": { \"hub-tool\": { \"auth\": \"${DOCKERHUB_AUTH_HASH}\" } } }" > config.json
-            export DOCKER_CONFIG="$(pwd)"
-            for HUB_REPO in horizon minion sentinel meridian-minion; do
-              GC_LIST=$( ./hub-tool tag ls "opennms/${HUB_REPO}" | ( grep -E '^[^:][^:]*:(feature|jira|dependabot)' || true ) | ( grep inactive || true ) | cut -d" " -f1 )
-              for image in $GC_LIST; do
-                echo "Delete image $image"
-                ( yes || true ) | ./hub-tool tag rm $image
-              done
-            done
+            make validate
+      - run:
+          name: Build Web UI with yarn including tests
+          command: |
+            make compile-ui
+      - run:
+          name: Build from source
+          command: |
+            make quick-compile
+      - run:
+          name: Assemble tarball
+          command: |
+            make quick-assemble
+      - run:
+          name: Quick smoke tests
+          command: |
+            make quick-smoke
+          no_output_timeout: 30m
+      - run:
+          name: Analyze OCI layers
+          command: |
+            make show-core-oci
+            make show-minion-oci
+            make show-sentinel-oci
+      - collect-results
+      - save-maven-cache
+      - save-nodejs-cache
+      - clean-system
 
-  trigger-coverage:
-    docker:
-      - image: cimg/python:3.10.1
+  expensive-build:
+    machine: true
+    resource_class: bluebird-labs/c7g2xlarge
     steps:
-      - shallow-clone
+      - cached-checkout
+      - save-cached-checkout
+      - environment
+      - system-info
+      - extract-pom-version
+      - restore-maven-cache
+      - restore-nodejs-cache
       - run:
-          name: Creating build-trigger file
+          name: Cleaning project for quick validation
           command: |
-               cp .circleci/example-build-triggers.override.json /tmp/build-triggers.json
-               sed -i 's/"coverage": false/"coverage": true/g' /tmp/build-triggers.json
-      - store_artifacts:
-          path: /tmp/build-triggers.json
-          destination: build-triggers.json      
-      - continuation/continue:
-          circleci_domain: circleci.com
-          configuration_path: .circleci/main.yml
-          parameters: '{ "trigger-coverage": true }'
+            make validate
+      - run:
+          name: Build Web UI with yarn including tests
+          command: |
+            make compile-ui
+      - run:
+          name: Build from source
+          command: |
+            make compile
+          no_output_timeout: 30m
+      - run:
+          name: Assemble tarball
+          command: |
+            make assemble
+      - run:
+          name: Quick smoke tests
+          command: |
+            make quick-smoke
+          no_output_timeout: 30m
+      - run:
+          name: Create Software Bill of Materials (SBOM) for container images
+          command: |
+            make core-oci-sbom
+            make minion-oci-sbom
+            make sentinel-oci-sbom
+      - run:
+          name: Security scanning container images
+          command: |
+            make core-oci-sec-scan
+            make minion-oci-sec-scan
+            make sentinel-oci-sec-scan
+      - run:
+          name: Send code coverage data
+          command: |
+            make code-coverage
+      - collect-results
+      - save-maven-cache
+      - save-nodejs-cache
+      - clean-system
 
-  trigger-path-filtering:
-    docker:
-      - image: cimg/python:3.10
-    parameters:
-      base-revision:
-        default: main
-        description: The revision to compare the current one against for the purpose of determining changed files.
-        type: string
-      mapping:
-        default: ""
-        description: Mapping of path regular expressions to pipeline parameters and values. One mapping per line, whitespace-delimited.
-        type: string
+  unit-tests:
+    machine: true
+    resource_class: bluebird-labs/c7g2xlarge
     steps:
-      - shallow-clone
+      - cached-checkout
+      - save-cached-checkout
+      - environment
+      - system-info
+      - extract-pom-version
+      - restore-maven-cache
+      - restore-nodejs-cache
       - run:
-          name: Trigger Status
+          name: Prepare the build for tests
           command: |
-            echo Coverage API: << pipeline.parameters.trigger-coverage-api >>
-            echo Prebuild: << pipeline.parameters.trigger-prebuild >>
-            echo Automation: << pipeline.parameters.trigger-automation >>
+            make quick-compile && make quick-assemble
       - run:
-          name: Process Generate
-          environment:
-            BASE_REVISION: << parameters.base-revision >>
-            MAPPING: << parameters.mapping >>
-            OUTPUT_PATH: /tmp/pipeline-parameters.json
-          command: python3 .circleci/pyscripts/process_generate.py 
+          name: Run unit test suites
+          command: |
+            make unit-tests
       - run:
-          name: Generate Main YAML file
-          command: python3 .circleci/pyscripts/generate_main.py 
-      - verify-config
-      - store_artifacts:
-          path: /tmp/pipeline-parameters.json
-          destination: pipeline-parameters.json
-      - store_artifacts:
-          path: /tmp/build-triggers.json
-          destination: build-triggers.json
-      - store_artifacts:
-          path: /tmp/.circleci/main.yml
-          destination: main.yml
-      - store_artifacts:
-          path: /tmp/performance.txt
-          destination: performance.txt
-      - continuation/continue:
-          circleci_domain: circleci.com
-          configuration_path: /tmp/.circleci/main.yml
-          parameters: /tmp/pipeline-parameters.json
+          name: Send code coverage data
+          command: |
+            make code-coverage
+      - collect-results
+      - save-maven-cache
+      - save-nodejs-cache
+      - clean-system
+
+  integration-tests:
+    machine: true
+    resource_class: bluebird-labs/c7g2xlarge
+    steps:
+      - cached-checkout
+      - save-cached-checkout
+      - environment
+      - system-info
+      - extract-pom-version
+      - restore-maven-cache
+      - restore-nodejs-cache
+      - run:
+          name: Prepare the build for tests
+          command: |
+            make quick-compile && make quick-assemble
+      - run:
+          name: Run integration test suites
+          command: |
+            make integration-tests
+      - run:
+          name: Send code coverage data
+          command: |
+            make code-coverage
+      - collect-results
+      - save-maven-cache
+      - save-nodejs-cache
+      - clean-system
+
+  smoke-tests-core:
+    machine: true
+    resource_class: bluebird-labs/c7g2xlarge
+    steps:
+      - cached-checkout
+      - save-cached-checkout
+      - environment
+      - system-info
+      - extract-pom-version
+      - restore-maven-cache
+      - restore-nodejs-cache
+      - run:
+          name: Build and assemble to create container images
+          command: |
+            make quick-compile
+            make quick-assemble
+      - run:
+          name: Run smoke tests
+          command: |
+            make core-smoke
+          no_output_timeout: 1h
+      - run:
+          name: Send code coverage data
+          command: |
+            make code-coverage
+      - collect-results
+      - save-maven-cache
+      - save-nodejs-cache
+      - clean-system
+
+  smoke-tests-minion:
+    machine: true
+    resource_class: bluebird-labs/c7g2xlarge
+    steps:
+      - cached-checkout
+      - save-cached-checkout
+      - environment
+      - system-info
+      - extract-pom-version
+      - restore-maven-cache
+      - restore-nodejs-cache
+      - run:
+          name: Build and assemble to create container images
+          command: |
+            make quick-compile
+            make quick-assemble
+      - run:
+          name: Run smoke tests
+          command: |
+            make minion-smoke
+          no_output_timeout: 1h
+      - run:
+          name: Send code coverage data
+          command: |
+            make code-coverage
+      - collect-results
+      - save-maven-cache
+      - save-nodejs-cache
+      - clean-system
+
+  smoke-tests-sentinel:
+    machine: true
+    resource_class: bluebird-labs/c7g2xlarge
+    steps:
+      - cached-checkout
+      - save-cached-checkout
+      - environment
+      - system-info
+      - extract-pom-version
+      - restore-maven-cache
+      - restore-nodejs-cache
+      - run:
+          name: Build and assemble to create container images
+          command: |
+            make quick-compile
+            make quick-assemble
+      - run:
+          name: Run smoke tests
+          command: |
+            make sentinel-smoke
+          no_output_timeout: 1h
+      - run:
+          name: Send code coverage data
+          command: |
+            make code-coverage
+      - collect-results
+      - save-maven-cache
+      - save-nodejs-cache
+      - clean-system

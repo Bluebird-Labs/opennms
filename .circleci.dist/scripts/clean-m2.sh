@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 
 # keep anything downloaded in the last 7 days
 KEEP="+4"
