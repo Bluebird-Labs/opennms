@@ -7,9 +7,9 @@
       </activation>
       <repositories>
         <repository>
-          <id>opennms-repo</id>
-          <name>OpenNMS Mega-Repository</name>
-          <url>https://maven.opennms.org/repository/everything/</url>
+          <id>bluebird-artifactory</id>
+          <name>Bluebird Artifactory</name>
+          <url>https://maven.bluebirdlabs.tech/repository/everything/</url>
           <releases>
             <enabled>true</enabled>
             <updatePolicy>never</updatePolicy>
@@ -33,9 +33,9 @@
       </repositories>
       <pluginRepositories>
         <pluginRepository>
-          <id>opennms-repo</id>
-          <name>OpenNMS Mega-Repository</name>
-          <url>https://maven.opennms.org/repository/everything/</url>
+          <id>bluebird-artifactory</id>
+          <name>Bluebird Artifactory</name>
+          <url>https://maven.bluebirdlabs.tech/repository/everything/</url>
           <releases>
             <enabled>true</enabled>
             <updatePolicy>never</updatePolicy>

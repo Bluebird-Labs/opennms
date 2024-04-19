@@ -30,6 +30,7 @@
   <packaging>pom</packaging>
   <name>OpenNMS</name>
   <url>http://opennms.org/</url>
+  <!-- FORK: update description -->
   <description>
     OpenNMS is the world's first enterprise grade network management platform developed under the open source model. It consists of a community supported open-source project as well as a commercial services, training and support organization.
   </description>
@@ -43,14 +44,17 @@
       </comments>
     </license>
   </licenses>
+  <!-- FORK: update url -->
   <issueManagement>
     <system>Jira</system>
     <url>http://issues.opennms.org/</url>
  </issueManagement>
+  <!-- FORK: update -->
   <ciManagement>
     <system>CircleCI</system>
     <url>https://app.circleci.com/pipelines/github/OpenNMS/opennms</url>
   </ciManagement>
+  <!-- FORK: update -->
   <developers>
     <developer>
       <id>soleger</id>
@@ -86,6 +90,7 @@
       <timezone>-5</timezone>
     </developer>
   </developers>
+  <!-- FORK: update -->
   <scm>
     <connection>scm:git:https://github.com/OpenNMS/opennms.git</connection>
     <developerConnection>scm:git:https://${user.name}@github.com/OpenNMS/opennms.git</developerConnection>
@@ -2181,8 +2186,8 @@
         </repository>
         <repository>
           <id>opennms-snapshots</id>
-          <name>OpenNMS Snapshot Maven Mega-Repository</name>
-          <url>https://maven.opennms.org/repository/everything/</url>
+          <name>Bluebird Snapshot Artifactory</name>
+          <url>https://maven.bluebirdlabs.tech/repository/bluebird-snapshots/</url>
           <releases>
             <enabled>false</enabled>
           </releases>
@@ -2222,8 +2227,8 @@
         </pluginRepository>
         <pluginRepository>
           <id>opennms-snapshots</id>
-          <name>OpenNMS Snapshot Maven Mega-Repository</name>
-          <url>https://maven.opennms.org/repository/everything/</url>
+          <name>Bluebird Snapshot Artifactory</name>
+          <url>https://maven.bluebirdlabs.tech/repository/bluebird-snapshots/</url>
           <releases>
             <enabled>false</enabled>
           </releases>
@@ -5563,9 +5568,9 @@
       </snapshots>
     </pluginRepository>
     <pluginRepository>
-      <id>opennms-repo</id>
-      <name>OpenNMS Mega-Repository</name>
-      <url>https://maven.opennms.org/repository/everything/</url>
+      <id>bluebird-artifactory</id>
+      <name>Bluebird Artifactory</name>
+      <url>https://maven.bluebirdlabs.tech/repository/everything/</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
@@ -5586,10 +5591,27 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <!-- TODO MVR either have it here, or move it to mega repository -->
+<!--    <repository>-->
+<!--      <id>atlassian</id>-->
+<!--      <url>https://packages.atlassian.com/maven-3rdparty/</url>-->
+<!--      <snapshots>-->
+<!--        <enabled>false</enabled>-->
+<!--      </snapshots>-->
+<!--    </repository>-->
+    <!-- FORK: update -->
     <repository>
-      <id>opennms-repo</id>
-      <name>OpenNMS Mega-Repository</name>
-      <url>https://maven.opennms.org/repository/everything/</url>
+      <id>bluebird-artifactory</id>
+      <name>Bluebird Artifactory</name>
+      <url>https://maven.bluebirdlabs.tech/repository/everything/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>bluebird-thirdparty-artifactory</id>
+      <name>Bluebird Thirdparty Artifactory</name>
+      <url>https://maven.bluebirdlabs.tech/repository/thirdparty/</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>

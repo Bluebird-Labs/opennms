@@ -87,9 +87,10 @@
     <!-- override a bad repo that's causing issues -->
     <repositories>
         <repository>
+            <!-- TODO MVR fix me -->
             <id>spring-ext</id>
             <name>OpenNMS Mega-Repository (spring-ext override)</name>
-            <url>https://maven.opennms.org/repository/everything/</url>
+            <url>https://maven.bluebirdlabs.tech/repository/everything/</url>
         </repository>
     </repositories>
 </project>

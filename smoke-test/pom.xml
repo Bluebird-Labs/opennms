@@ -988,9 +988,9 @@
       </snapshots>
     </repository>
     <repository>
-      <id>opennms-repo</id>
-      <name>OpenNMS Mega-Repository</name>
-      <url>https://maven.opennms.org/repository/everything/</url>
+      <id>bluebird-artifactory</id>
+      <name>Bluebird Artifactory</name>
+      <url>https://maven.bluebirdlabs.tech/repository/everything/</url>
       <releases>
         <enabled>true</enabled>
         <updatePolicy>never</updatePolicy>
@@ -1001,8 +1001,8 @@
     </repository>
     <repository>
       <id>opennms-snapshots</id>
-      <name>OpenNMS Snapshot Maven Mega-Repository</name>
-      <url>https://maven.opennms.org/repository/everything/</url>
+      <name>Bluebird Snapshot Artifactory</name>
+      <url>https://maven.bluebirdlabs.tech/repository/bluebird-snapshots/</url>
       <releases>
         <enabled>false</enabled>
       </releases>

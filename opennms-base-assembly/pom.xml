@@ -1279,8 +1279,8 @@
   <repositories>
     <repository>
       <id>jasperreports</id>
-      <name>OpenNMS Mega-Repository (jasperreports override)</name>
-      <url>https://maven.opennms.org/repository/everything/</url>
+      <name>Bluebird Artifactory (jasperreports override)</name>
+      <url>https://maven.bluebirdlabs.tech/repository/everything/</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>

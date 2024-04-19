@@ -1,3 +1,4 @@
+#FORK: drop me
 #!/usr/bin/env bash
 set -e
 
