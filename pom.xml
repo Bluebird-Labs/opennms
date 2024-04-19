@@ -1806,7 +1806,7 @@
     <gwtVersion>2.9.0</gwtVersion>
     <gwtPluginVersion>${gwtVersion}</gwtPluginVersion>
     <h2databaseVersion>1.4.197</h2databaseVersion>
-    <hibernateVersion>3.6.11.ONMS_RELEASE_1</hibernateVersion>
+    <hibernateVersion>4.0.1.Final</hibernateVersion>
     <hibernateOsgiVersion>3.6.11</hibernateOsgiVersion>
     <hibernateAnnotationsVersion>3.2.0.Final</hibernateAnnotationsVersion>
     <hibernateAnnotationsOsgiVersion>3.2.0</hibernateAnnotationsOsgiVersion>

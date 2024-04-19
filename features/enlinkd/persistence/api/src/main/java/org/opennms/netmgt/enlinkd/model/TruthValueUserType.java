@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.IntegerType;
 import org.opennms.netmgt.enlinkd.model.OspfElement.TruthValue;
@@ -48,8 +49,8 @@ public class TruthValueUserType extends EnumType {
     }
 
     @Override
-    public Object nullSafeGet(final ResultSet rs, final String[] names, final Object owner) throws HibernateException, SQLException {
-        Integer c = IntegerType.INSTANCE.nullSafeGet(rs, names[0]);
+    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+        final Integer c = (Integer) IntegerType.INSTANCE.nullSafeGet(rs, names[0], session, owner);
         if (c == null) {
             return null;
         }
@@ -62,11 +63,11 @@ public class TruthValueUserType extends EnumType {
     }
 
     @Override
-    public void nullSafeSet(final PreparedStatement st, final Object value, final int index) throws HibernateException, SQLException {
+    public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
         if (value == null) {
-            IntegerType.INSTANCE.nullSafeSet(st, null, index);
+            IntegerType.INSTANCE.nullSafeSet(st, null, index, session);
         } else if (value instanceof TruthValue){
-            IntegerType.INSTANCE.nullSafeSet(st, ((TruthValue)value).getValue(), index);
+            IntegerType.INSTANCE.nullSafeSet(st, ((TruthValue)value).getValue(), index, session);
         }
     }
 
