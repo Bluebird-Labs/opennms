@@ -56,33 +56,4 @@ onMounted(() => {
 @import "@featherds/styles/mixins/typography";
 @import "@featherds/styles/themes/open-mixins";
 
-html {
-  overflow-x: hidden;
-}
-.main-content {
-  table {
-    width: 100%;
-  }
-}
-a {
-  text-decoration: none;
-  color: var($clickable-normal);
-}
-.pointer {
-  cursor: pointer !important;
-}
-
-// global feather typography classes
-.headline3 {
-  @include headline3;
-}
-.headline4 {
-  @include headline4;
-}
-.subtitle1 {
-  @include subtitle1;
-}
-.subtitle2 {
-  @include subtitle2;
-}
 </style>

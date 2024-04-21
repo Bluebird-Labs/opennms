@@ -35,7 +35,7 @@ import * as Pinia from 'pinia'
 import * as VueRouter from 'vue-router'
 
 import '@featherds/styles'
-import '@featherds/styles/themes/open-light.css'
+import '@/styles/theme/bluebird/bluebird-theme.scss'
 
 import 'vue-diff/dist/index.css'
 

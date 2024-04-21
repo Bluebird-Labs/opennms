@@ -380,26 +380,26 @@ const notificationsShowMoreLink = computed<string>(() =>
 
 const toggleDarkLightMode = (savedTheme: string | null) => {
   const el = document.body
-  const newTheme = theme.value === light ? dark : light
-
-  if (savedTheme && (savedTheme === light || savedTheme === dark)) {
-    theme.value = savedTheme
-    el.classList.add(savedTheme)
-    return
-  }
-
-  // set the new theme on the body
-  el.classList.add(newTheme)
-
-  // remove the current theme
-  if (theme.value) {
-    el.classList.remove(theme.value)
-  }
-
-  // save the new theme in data and localStorage
-  theme.value = newTheme
-  localStorage.setItem('theme', theme.value)
-  appStore.setTheme(theme.value)
+  // const newTheme = theme.value === light ? dark : light
+  //
+  // if (savedTheme && (savedTheme === light || savedTheme === dark)) {
+  //   theme.value = savedTheme
+  //   el.classList.add(savedTheme)
+  //   return
+  // }
+  //
+  // // set the new theme on the body
+  // el.classList.add(newTheme)
+  //
+  // // remove the current theme
+  // if (theme.value) {
+  //   el.classList.remove(theme.value)
+  // }
+  //
+  // // save the new theme in data and localStorage
+  // theme.value = newTheme
+  // localStorage.setItem('theme', theme.value)
+  // appStore.setTheme(theme.value)
 }
 
 const computeLink = (url: string, isVueLink?: boolean | null) => {
@@ -554,8 +554,8 @@ onMounted(async () => {
 }
 
 .menu-link {
-  color: var($primary-text-on-color) !important;
-  background-color: var(--feather-surface-dark);
+  color: var(--feather-state-text-color-on-surface-dark) !important;
+  background-color: var(--feather-surface-ldark);
   margin-left: 2px;
   // make it look more like OG menu
   text-transform: none;
@@ -566,7 +566,7 @@ onMounted(async () => {
 
 .top-menu-link,
 a.top-menu-link:visited {
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--feather-state-text-color-on-surface-dark);
   font-weight: 400;
   font-size: .875rem;
 }
@@ -591,8 +591,8 @@ a.top-menu-link:visited {
 
 .menubar-dropdown-button-dark {
   // make it look more like OG menu
-  color: rgba(255, 255, 255, 0.78); // --feather-surface-light or --feather-state-text-color-on-surface-dark
-  background-color: #131736; // --feather-surface-dark
+  color: var(--feather-state-text-color-on-surface-dark); // --feather-surface-light or --feather-state-text-color-on-surface-dark
+  background-color: var(--feather-surface-dark); // --feather-surface-dark
   text-transform: none;
   letter-spacing: normal;
   font-weight: 400;
@@ -620,13 +620,9 @@ a.top-menu-link:visited {
   padding-right: 6px;
   margin-left: 4px;
   margin-right: 2px;
-  background-color: #ffffff;
-  color: #131736; // --feather-surface-dark
+  //background-color: var(--feather-state-color-on-surface-dark);
+  color: var(--feather-surface-dark); // --feather-surface-dark
   border-radius: .8rem;
-}
-
-.notification-dropdown-item {
-  //  min-height: 200px;
 }
 
 .notification-dropdown-item-content {
@@ -667,52 +663,8 @@ a.top-menu-link:visited {
   min-width: 100px;
 }
 
-.badge-info {
-  background-color: #17a2b8;
-}
-
-.badge-severity-indeterminate {
-  background-color: #5dafdd;
-}
-
-.badge-severity-cleared {
-  background-color: #cdcdd0;
-}
-
-.badge-severity-normal {
-  background-color: #438953;
-}
-
-.badge-severity-warning {
-  background-color: #fff000;
-}
-
-.badge-severity-minor {
-  background-color: #ffd60a;
-}
-
-.badge-severity-major {
-  background-color: #ff9f0a;
-}
-
-.badge-severity-critical {
-  background-color: #df5251;
-}
-</style>
-
-<style lang="scss">
-@import "@featherds/styles/themes/open-mixins";
-
 body {
   background: var($background);
-}
-
-.open-light {
-  @include open-light;
-}
-
-.open-dark {
-  @include open-dark;
 }
 
 .light-dark {
@@ -837,7 +789,7 @@ body .feather-menu .feather-menu-dropdown {
 }
 
 a.top-menu-icon svg.feather-icon {
-  color: #FFF;
+  color: var(--feather-state-text-color-on-surface-dark);
 }
 
 .feather-menu {

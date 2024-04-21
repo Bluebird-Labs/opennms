@@ -1,0 +1,58 @@
+@import '@featherds/styles/themes/_variables.scss';
+@import '@featherds/styles/themes/_base-theme.scss';
+
+@import 'bluebird-base.scss';
+
+@import "@featherds/styles/themes/open-mixins";
+@import "@featherds/styles/lib/fonts.scss";
+
+$bluebird-primary: (
+        $primary: #400052,
+        $primary-variant: #70008F,
+        $state-color-on-surface: white
+);
+$bluebird-primary: add-RGB($bluebird-primary);
+
+$bluebird-map: map-collect($base-theme, $base-bluebird, $bluebird-primary);
+
+@mixin bluebird-theme() {
+  @each $property, $value in $bluebird-map {
+    #{$property}: #{$value};
+  }
+}
+
+:root {
+  @include bluebird-theme();
+}
+
+.badge-info {
+  background-color: #17a2b8;
+}
+
+.badge-severity-indeterminate {
+  background-color: #5dafdd;
+}
+
+.badge-severity-cleared {
+  background-color: #cdcdd0;
+}
+
+.badge-severity-normal {
+  background-color: #438953;
+}
+
+.badge-severity-warning {
+  background-color: #fff000;
+}
+
+.badge-severity-minor {
+  background-color: #ffd60a;
+}
+
+.badge-severity-major {
+  background-color: #ff9f0a;
+}
+
+.badge-severity-critical {
+  background-color: #df5251;
+}

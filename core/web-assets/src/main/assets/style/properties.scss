@@ -19,14 +19,21 @@
  * language governing permissions and limitations under the
  * License.
  */
+
+// Base colors
+$primary:       #400052;
+$secondary:     #2680ff;
+$light:         #d6d6d6;
+$dark:          #0c1226;
+
 //colors
-$color_horizon:                     #4c9d29;
+$color_horizon:                     #400052;
 $color_meridian:                    #227cb8;
-$link_color:                        #265A87;
+$link_color:                        #400052;
 
 
 $opennms-chromatic-black:           #0A0C1B;
-$opennms-dark-blue:                 #131736;
+$opennms-dark-blue:                 #0c1226;
 $opennms-cool-gray-4:               #494C67;
 $opennms-cool-gray-3:               #7E8198;
 $opennms-cool-gray-2:               #B4B6C8;
