@@ -1,49 +1,84 @@
 <script setup lang="ts">
-
 import LoginLogoHorizon from "@/assets/LoginLogoHorizon.vue";
 import Logo from "@/assets/Logo.vue";
+import {rest} from '@/services/axiosInstances'
+import {useAuthStore} from "@/stores/authStore";
+import {WhoAmIResponse} from "@/types";
+import router from "@/router";
+
+const username = ref(null);
+const password = ref(null);
+const loginFailed = ref(false);
+
+const login = () => {
+  if (username.value && password.value) {
+    loginFailed.value = false;
+    const token = btoa(`${username.value}:${password.value}`)
+    rest.get('/whoami', {
+      headers: {
+        'Authorization': `Basic ${token}`
+      }
+    })
+        .then((response) => {
+          const authStore = useAuthStore();
+          authStore.whoAmI = response.data as WhoAmIResponse;
+          authStore.setLogin({
+            username: username.value!,
+            password: password.value!
+          })
+
+          router.push(authStore.returnUrl || '/')
+        })
+        .catch(() => {
+          loginFailed.value = true;
+        });
+  }
+}
+
 </script>
 
 <template>
   <div class="login-page">
     <div class="card login-form rounded">
-      <div style="padding-bottom: 36px; padding-top: 60px">
-        <LoginLogoHorizon />
+      <div style="padding-bottom: 36px; padding-top: 60px; width: 200px">
+        <LoginLogoHorizon/>
       </div>
 
-      <form class="" id="loginForm" name="loginForm" role="form" method="post" action="<c:url value='j_spring_security_check'/>" autocomplete="off">
+      <form class="" id="loginForm" name="loginForm" role="form" autocomplete="off">
         <div class="form-content">
           <div class="form-group">
             <input type="text"
                    id="input_j_username"
                    name="j_username"
-                   placeholder="Username" a
+                   v-model="username"
+                   placeholder="Username"
                    autofocus
                    autocomplete="username" required/>
           </div>
 
           <div class="form-group">
-            <input type="password" id="input_j_password" name="j_password" placeholder="Password" autocomplete="off" required>
+            <input type="password"
+                   id="input_j_password"
+                   name="j_password"
+                   v-model="password"
+                   placeholder="Password"
+                   autocomplete="off"
+                   required>
           </div>
 
-<!--          <c:if test="${not empty param.session_expired}">-->
-<!--            <div id="login-expired" class="alert alert-warning">-->
-<!--              <strong>Session expired</strong> <br /> Please log back in.-->
-<!--            </div>-->
-<!--          </c:if>-->
+          <!-- TODO MVR add session expired -->
+          <!--          <c:if test="${not empty param.session_expired}">-->
+          <!--            <div id="login-expired" class="alert alert-warning">-->
+          <!--              <strong>Session expired</strong> <br /> Please log back in.-->
+          <!--            </div>-->
+          <!--          </c:if>-->
 
-<!--          <c:if test="${not empty param.login_error}">-->
-<!--            <div id="login-attempt-failed" class="alert alert-danger">-->
-<!--              Your login attempt failed, please try again.-->
-
-<!--              <%&#45;&#45; This is: AbstractProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY &#45;&#45;%>-->
-<!--              <p id="login-attempt-failed-reason">Reason: ${SPRING_SECURITY_LAST_EXCEPTION.message}</p>-->
-<!--            </div>-->
-<!--          </c:if>-->
+          <div v-if="loginFailed" id="login-attempt-failed" class="alert alert-danger">
+            Your login attempt failed, please try again.
+          </div>
 
           <div class="form-group">
-            <input name="j_usergroups" type="hidden" value=""/>
-            <button name="Login" type="submit">LOGIN</button>
+            <button name="Login" type="button" @click="login">LOGIN</button>
           </div>
         </div>
       </form>
@@ -51,13 +86,17 @@ import Logo from "@/assets/Logo.vue";
 
     <div class="" style="position: absolute; bottom: 0px; right: 10px; font-size: 3em; padding: 20pt 20pt 5pt 20pt">
       <div style="padding-bottom: 20px; padding-top: 20px">
-        <Logo mode="dark" width="180px"/>
+        <Logo mode="light" class="logo-container"/>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
+
+.logo-container {
+  width: 180px !important;
+}
 
 .login-page {
   position: absolute;
@@ -69,7 +108,7 @@ import Logo from "@/assets/Logo.vue";
   background-size: cover;
 }
 
-.form-group{
+.form-group {
   margin-bottom: 1.25rem;
 }
 
@@ -92,7 +131,7 @@ input {
   height: 32px;
   border-radius: 5px;
   outline: none;
-  border:2px solid rgba(97, 215, 231, 0.829);
+  border: 2px solid rgba(97, 215, 231, 0.829);
   background-color: rgba(255, 255, 255, 0.623);
   margin-left: 21%;
 }

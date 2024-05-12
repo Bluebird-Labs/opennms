@@ -9,8 +9,9 @@ import Logs from './Logs.svg'
 </script>
 
 <style scoped lang="scss">
-@import "@featherds/styles/themes/variables";
-.logs {
-  color: var($secondary-text-on-surface);
-}
+// TODO MVR ....
+//@import "@featherds/styles/themes/variables";
+//.logs {
+//  color: var($secondary-text-on-surface);
+//}
 </style>

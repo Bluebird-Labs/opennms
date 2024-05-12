@@ -9,8 +9,9 @@ import Endpoints from './Endpoints.svg'
 </script>
 
 <style scoped lang="scss">
-@import "@featherds/styles/themes/variables";
-.endpoints {
-  color: var($secondary-text-on-surface);
-}
+// TODO MVR ...
+//@import "@featherds/styles/themes/variables";
+//.endpoints {
+//  color: var($secondary-text-on-surface);
+//}
 </style>

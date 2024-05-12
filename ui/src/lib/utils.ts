@@ -64,3 +64,32 @@ export const hasNonEmptyProperty = (obj?: any) => {
     return value && isString(value) && value.length > 0
   })
 }
+
+/**
+ * KeyboardEvent.code enum
+ */
+export enum Code {
+  PAGEUP = 'PageUp',
+  PAGEDOWN = 'PageDown',
+  UP = 'ArrowUp',
+  DOWN = 'ArrowDown',
+  LEFT = 'ArrowLeft',
+  RIGHT = 'ArrowRight',
+  HOME = 'Home',
+  END = 'End',
+  ENTER = 'Enter',
+  SPACE = 'Space',
+  ESCAPE = 'Escape',
+  BACKSPACE = 'Backspace',
+  DELETE = 'Delete',
+}
+
+/**
+ * KeyboardEvent modifier enum
+ */
+export enum Modifier {
+  ALT = 'altKey',
+  CTRL = 'ctrlKey',
+  META = 'metaKey',
+  SHIFT = 'shiftKey',
+}

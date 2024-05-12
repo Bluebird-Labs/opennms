@@ -1,31 +1,40 @@
 <template>
-  <FeatherExpansionPanel
+
+  <ExpansionPanel
     id="thread-pool-expansion"
     class="expansion-panel"
     v-model="threadPoolsActive"
   >
     <template v-slot:title>
-      <div class="title-flex">
-        <div class="title">Thread Pools</div>
+      <div class="d-flex">
+        <div class="h3 m-0 me-4">Thread Pools</div>
         <div v-if="!threadPoolsActive">
-          <FeatherChipList label="">
-            <FeatherChip v-if="unTouchedThreadPoolData.importThreads">
-              <template v-slot:icon>{{ unTouchedThreadPoolData.importThreads }}</template
-              >Import Threads
-            </FeatherChip>
-            <FeatherChip v-if="unTouchedThreadPoolData.scanThreads">
-              <template v-slot:icon>{{ unTouchedThreadPoolData.scanThreads }}</template
-              >Scan Threads
-            </FeatherChip>
-            <FeatherChip v-if="unTouchedThreadPoolData.rescanThreads">
-              <template v-slot:icon>{{ unTouchedThreadPoolData.rescanThreads }}</template
-              >Rescan Threads
-            </FeatherChip>
-            <FeatherChip v-if="unTouchedThreadPoolData.writeThreads">
-              <template v-slot:icon>{{ unTouchedThreadPoolData.writeThreads }}</template
-              >Write Threads
-            </FeatherChip>
-          </FeatherChipList>
+          <div class="d-flex flex-wrap gap-2">
+            <Chip v-if="unTouchedThreadPoolData.importThreads">
+              <template v-slot:icon>{{ unTouchedThreadPoolData.importThreads }}
+              </template
+              >
+              Import Threads
+            </Chip>
+            <Chip v-if="unTouchedThreadPoolData.scanThreads">
+              <template v-slot:icon>{{ unTouchedThreadPoolData.scanThreads }}
+              </template
+              >
+              Scan Threads
+            </Chip>
+            <Chip v-if="unTouchedThreadPoolData.rescanThreads">
+              <template v-slot:icon>{{ unTouchedThreadPoolData.rescanThreads }}
+              </template
+              >
+              Rescan Threads
+            </Chip>
+            <Chip v-if="unTouchedThreadPoolData.writeThreads">
+              <template v-slot:icon>{{ unTouchedThreadPoolData.writeThreads }}
+              </template
+              >
+              Write Threads
+            </Chip>
+          </div>
         </div>
       </div>
     </template>
@@ -34,52 +43,42 @@
         Thread pool sizes impact the performance of the provisioning subsystem. Larger systems may require larger
         values. To adjust them, type a new number in the field or use the up/down arrows to select a value.
       </p>
-      <FeatherInput
-        :error="getError('importThreads')"
-        type="number"
+      <NumberInput
+        id="importThreads"
         label="Import"
         hint="Number of threads to allocate for requisition import tasks."
         v-model="threadPoolData.importThreads"
-        @keypress="enterCheck"
       />
-      <FeatherInput
-        :error="getError('scanThreads')"
-        type="number"
+      <NumberInput
+        id="scanThreads"
         label="Scan"
         hint="Number of threads to allocate for manual scanning tasks."
         v-model="threadPoolData.scanThreads"
-        @keypress="enterCheck"
       />
-      <FeatherInput
-        :error="getError('rescanThreads')"
-        type="number"
+      <NumberInput
+        id="rescanThreads"
         label="Rescan"
         hint="Number of threads to allocate for scheduled rescanning tasks."
         v-model="threadPoolData.rescanThreads"
-        @keypress="enterCheck"
       />
-      <FeatherInput
-        class="last-input"
-        :error="getError('writeThreads')"
-        type="number"
+      <NumberInput
+        id="writeThreads"
         label="Write"
         hint="Number of threads to allocate for writing to the database."
         v-model="threadPoolData.writeThreads"
-        @keypress="enterCheck"
       />
-      <FeatherButton
-        primary
-        @click="updateThreadpools"
-        :disabled="loading"
-      >
+      <button class="btn btn-primary mt-4"
+              :disabled="loading"
+              @click="updateThreadpools">
         <FeatherSpinner
           v-if="loading"
           class="spinner-button"
         />
         <span v-if="!loading">Update Thread Pools</span>
-      </FeatherButton>
+      </button>
     </div>
-  </FeatherExpansionPanel>
+  </ExpansionPanel>
+
 </template>
 
 <script
@@ -88,10 +87,7 @@
 >
 import { useConfigurationStore } from '@/stores/configurationStore'
 
-import { FeatherInput } from '@featherds/input'
-import { FeatherButton } from '@featherds/button'
-import { FeatherExpansionPanel } from '@featherds/expansion'
-import { FeatherChip, FeatherChipList } from '@featherds/chips'
+import Chip from '@/components/Common/chip/Chip.vue'
 import { FeatherSpinner } from '@featherds/progress'
 import { isEqual as _isEqual } from 'lodash'
 
@@ -99,6 +95,8 @@ import { putProvisionDService } from '@/services/configurationService'
 import useSnackbar from '@/composables/useSnackbar'
 import { threadPoolKeys } from './copy/threadPoolKeys'
 import { ConfigurationHelper } from './ConfigurationHelper'
+import NumberInput from '@/components/Common/inputs/NumberInput.vue'
+import ExpansionPanel from '@/components/Common/ExpansionPanel.vue'
 
 const configurationStore = useConfigurationStore()
 const { showSnackBar } = useSnackbar()
@@ -150,15 +148,15 @@ const updateThreadpools = async () => {
       const reducedUpdatedProvisionDData = threadPoolKeys.reduce((acc, key) => {
         const obj: Record<string, string> = {}
 
-        for(let elem in updatedProvisionDData) {
-          if(elem === key){
+        for (let elem in updatedProvisionDData) {
+          if (elem === key) {
             obj[elem] = updatedProvisionDData[elem]
             break
           }
         }
 
-        return {...acc, ...obj}
-      },{})
+        return { ...acc, ...obj }
+      }, {})
       const haveThreadPoolValuesChanged = !_isEqual(currentThreadpoolState, reducedUpdatedProvisionDData)
 
       // Set Update State
@@ -177,7 +175,7 @@ const updateThreadpools = async () => {
 
       let messageUpdateSuccess = 'Thread pool data saved.'
 
-      if(!haveThreadPoolValuesChanged) {
+      if (!haveThreadPoolValuesChanged) {
         showSnackBar({
           msg: messageUpdateSuccess
         })
@@ -227,21 +225,7 @@ const getError = (key: string) => {
   lang="scss"
   scoped
 >
-@import "@featherds/styles/mixins/typography";
 
-.expansion-panel{
-  :deep(.feather-expansion-header-button) {
-    height: 72px;
-  }
-}
-.title {
-  @include headline3();
-  margin-right: 16px;
-}
-.title-flex {
-  display: flex;
-  align-items: center;
-}
 .last-input {
   margin-bottom: 10px;
 }

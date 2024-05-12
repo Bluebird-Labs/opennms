@@ -1,48 +1,30 @@
 <template>
-  <FeatherDialog
+  <Modal
     v-model="visible"
-    :labels="labels"
-    :hide-close="true"
+    :title="title"
   >
-    <p class="my-content">This will delete the definition titled: {{ title }}</p>
+    <p>This will delete the definition titled: {{ options.configName }}</p>
     <template v-slot:footer>
-      <FeatherButton
-        primary
-        @click="props?.doubleCheckSelected(false)"
-        >No</FeatherButton
-      >
-      <FeatherButton
-        error
-        @click="props?.doubleCheckSelected(true)"
-        >Yes</FeatherButton
-      >
+      <button class="btn btn-danger" @click="props.onButtonClick(false)">No</button>
+      <button class="btn btn-primary" @click="props.onButtonClick(true)">Yes</button>
     </template>
-  </FeatherDialog>
+  </Modal>
 </template>
+<script lang="ts" setup>
+import Modal from '@/components/Common/modal/Modal.vue'
 
-<script
-  lang="ts"
-  setup
->
-import { FeatherDialog } from '@featherds/dialog'
-import { FeatherButton } from '@featherds/button'
-
-/**
- * Props
- */
-const props = defineProps({
-  title: String,
-  optionSelected: Object,
-  doubleCheckSelected: {
-    type: Function,
-    required: true
-  }
+export type ConfigurationDoubleCheckModalOptions = {
+  active: boolean,
+  index: number,
+  configName: string
+}
+const props = defineProps<{
+  onButtonClick: (confirm: boolean) => void,
+  options: ConfigurationDoubleCheckModalOptions,
+}>()
+const title = 'Are you sure?'
+let visible = ref(props?.options?.active || false)
+watch(() => props.options.active, (active) => {
+  visible.value = active
 })
-
-/**
- * Local State
- */
-const visible = computed(() => props?.optionSelected?.active)
-const title = computed(() => props?.optionSelected?.title)
-const labels = computed(() => ({ title: 'Are you sure?', close: 'Close' }))
 </script>

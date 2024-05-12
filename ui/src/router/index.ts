@@ -30,7 +30,7 @@ import Resources from '@/components/Resources/Resources.vue'
 import useRole from '@/composables/useRole'
 import useSnackbar from '@/composables/useSnackbar'
 import useSpinner from '@/composables/useSpinner'
-import Login from "@/components/Login.vue";
+import Login from '@/components/Login.vue'
 
 const { adminRole, filesystemEditorRole, dcbRole, rolesAreLoaded } = useRole()
 const { showSnackBar } = useSnackbar()

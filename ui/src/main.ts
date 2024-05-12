@@ -20,6 +20,15 @@
 /// License.
 ///
 
+// ==== BEGIN BOOTSTRAP SETUP ====
+import '@/styles/bootstrap/bootstrap.scss'
+import '@/styles/bootstrap/main.scss'
+
+// Bootstrap scripts
+import 'bootstrap'
+
+// ==== END BOOTSTRAP SETUP ====
+
 import { createApp, h } from 'vue'
 import { RouteRecordRaw } from 'vue-router'
 import VueDiff from 'vue-diff'

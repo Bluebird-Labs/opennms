@@ -1,11 +1,11 @@
 <template>
   <div class="main-wrapper">
-    <table class="condensed">
+    <table class="table">
       <thead>
-        <tr class="tr">
+        <tr class="">
           <FeatherSortHeader
             scope="col"
-            class="onms-sort-header"
+            class=""
             :property="RequisitionData.ImportName"
             :sort="sorts[RequisitionData.ImportName]"
             v-on:sort-changed="sortChanged"
@@ -13,7 +13,7 @@
           >
           <FeatherSortHeader
             scope="col"
-            class="onms-sort-header"
+            class=""
             :property="RequisitionData.ImportURL"
             :sort="sorts[RequisitionData.ImportURL]"
             v-on:sort-changed="sortChanged"
@@ -21,13 +21,13 @@
           >
           <th
             scope="col"
-            class="onms-sort-header"
+            class=""
           >
             Schedule Frequency
           </th>
           <FeatherSortHeader
             scope="col"
-            class="onms-sort-header"
+            class=""
             :property="RequisitionData.RescanExisting"
             :sort="sorts[RequisitionData.RescanExisting]"
             v-on:sort-changed="sortChanged"
@@ -57,37 +57,33 @@
             {{ rescanToEnglish(item[RequisitionData.RescanExisting]) }}
           </td>
           <td>
-            <div class="flex">
-              <FeatherButton
-                primary
-                icon="Edit"
+            <div class="flex gap-2 justify-content-end">
+              <button
+                class="btn btn-primary"
                 @click="() => props.editClicked(item.originalIndex)"
                 :disabled="Boolean(item[RequisitionData.ImportURL].startsWith('requisition://'))"
                 data-test="edit-btn"
               >
-                <FeatherIcon :icon="Edit" />
-              </FeatherButton>
-              <FeatherButton
-                icon="Delete"
+                <Icon :icon="IconRepository.Action.Edit" />
+              </button>
+              <button
+                class="btn btn-danger"
                 @click="() => props.deleteClicked(item.originalIndex)"
               >
-                <FeatherIcon
-                  class="delete-icon"
-                  :icon="Delete"
-                />
-              </FeatherButton>
+                <Icon :icon="IconRepository.Action.Delete" />
+              </button>
             </div>
           </td>
         </tr>
       </tbody>
     </table>
-    <FeatherPagination
+    <Pagination
       :total="pageVals.total"
       :page-size="pageVals.pageSize"
       :modelValue="pageVals.page"
       @update:modelValue="pageUpdate"
       @update:pageSize="pageSizeUpdate"
-    />
+      />
   </div>
 </template>
 
@@ -98,17 +94,13 @@
 import { ComputedRef, PropType } from 'vue'
 import { FeatherSortHeader, SORT } from '@featherds/table'
 import { FeatherPagination } from '@featherds/pagination'
-import { FeatherButton } from '@featherds/button'
-import { FeatherIcon } from '@featherds/icon'
-
-import Edit from '@featherds/icon/action/Edit'
-import Delete from '@featherds/icon/action/Delete'
-
 import { RequisitionData } from './copy/requisitionTypes'
 import { ConfigurationHelper } from './ConfigurationHelper'
 import ConfigurationCopyPasteDisplay from './ConfigurationCopyPasteDisplay.vue'
 import { ConfigurationPageVals, ConfigurationTableSort, ProvisionDServerConfiguration } from './configuration.types'
 import { rescanCopy } from './copy/rescanItems'
+import Pagination from '@/components/Common/Pagination.vue'
+import { IconRepository } from '@/assets/icons/IconRepository'
 
 /**
  * Props
@@ -219,39 +211,6 @@ table {
   @include table-condensed();
 }
 </style>
-<style
-  lang="scss"
-  scoped
->
-@import "@featherds/table/scss/table";
-@import "@featherds/styles/themes/variables";
-
-.main-wrapper {
-  table.condensed {
-    :deep(.onms-sort-header) {
-      > .header-flex-container {
-        justify-content: flex-start;
-      }
-    }
-  }
-}
-.flex {
-  display: flex;
-}
-.tr {
-  background-color: var($background);
-  .th {
-    color: var($primary);
-  }
-}
-.delete-icon {
-  color: var($error);
-}
-.main-wrapper {
-  padding: 16px 24px;
-}
-.cron {
-  max-width: 260px;
-}
+<style lang="scss" scoped>
 </style>
 

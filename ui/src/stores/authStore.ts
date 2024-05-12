@@ -20,22 +20,46 @@
 /// License.
 ///
 
-import { defineStore } from 'pinia'
+import {defineStore} from 'pinia'
 import API from '@/services'
-import { WhoAmIResponse } from '@/types'
+import {WhoAmIResponse} from '@/types'
 
+export type Credentials = {
+  username: string
+  password: string
+}
+
+// TODO MVR rework this probably?
 export const useAuthStore = defineStore('authStore', () => {
-  const whoAmI = ref({ roles: [] as string[] } as WhoAmIResponse)
+  const whoAmI = ref({roles: [] as string[]} as WhoAmIResponse)
   const loaded = ref(false)
+  const login = ref()
+  const returnUrl = ref();
 
   const getWhoAmI = async () => {
-    const resp = await API.getWhoAmI()
-    whoAmI.value = resp
+    whoAmI.value = await API.getWhoAmI()
+  }
+
+  const setLogin = (credentials: Credentials) => {
+    login.value = btoa(`${credentials.username}:${credentials.password}`)
+  }
+
+  const isLogin = () => {
+    return login.value != null;
+  }
+
+  const logout = () => {
+    login.value = null;
   }
 
   return {
+    returnUrl,
     loaded,
     whoAmI,
-    getWhoAmI
+    login,
+    getWhoAmI,
+    setLogin,
+    isLogin,
+    logout
   }
 })

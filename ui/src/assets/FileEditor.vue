@@ -9,8 +9,9 @@ import FileEditor from './FileEditor.svg'
 </script>
 
 <style scoped lang="scss">
-@import "@featherds/styles/themes/variables";
-.file-editor {
-  color: var($secondary-text-on-surface);
-}
+// TODO MVR ...
+//@import "@featherds/styles/themes/variables";
+//.file-editor {
+//  color: var($secondary-text-on-surface);
+//}
 </style>

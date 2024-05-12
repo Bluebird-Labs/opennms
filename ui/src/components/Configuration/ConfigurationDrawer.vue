@@ -247,14 +247,14 @@ const toggleHelp = () => {
   opacity: 1;
   pointer-events: all;
   transition: opacity ease-in-out 0.4s;
-  z-index: 2;
+  z-index: 5;
   position: relative;
 }
 .hidden {
   opacity: 0;
   pointer-events: none;
   transition: opacity ease-in-out 0.4s;
-  z-index: 2;
+  z-index: 5;
   position: relative;
 }
 .click-close {
@@ -262,7 +262,7 @@ const toggleHelp = () => {
   width: 100%;
   height: 100vh;
   position: fixed;
-  z-index: 2;
+  z-index: 5;
   background-color: rgba(0, 0, 0, 0.5);
   top: 0;
   left: 0;
@@ -302,9 +302,9 @@ const toggleHelp = () => {
   font-size: 32px;
 }
 .sideshared {
-  z-index: 2;
+  z-index: 5;
   background-color: var($background);
-  width: 40vw;
+  width: 100vw;
   min-width: 320px;
   height: 100vh;
   position: fixed;

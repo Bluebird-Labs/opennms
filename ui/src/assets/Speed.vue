@@ -9,12 +9,13 @@ import Speed from './Speed.svg'
 </script>
 
 <style scoped lang="scss">
-@import "@featherds/styles/themes/variables";
-.speed {
-  color: var($primary);
-
-  svg {
-    margin-bottom: -2px;
-  }
-}
+// TODO MVR ...
+//@import "@featherds/styles/themes/variables";
+//.speed {
+//  color: var($primary);
+//
+//  svg {
+//    margin-bottom: -2px;
+//  }
+//}
 </style>

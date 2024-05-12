@@ -1,19 +1,16 @@
 <template>
-  <div class="white-bg">
-    <div class="flex title-padding">
-      <h3 class="title">
+  <div class="card card-body">
+    <div class="d-flex justify-content-between">
+      <h3 class="">
         External Requisitions
         {{ requisitionDCount }}
       </h3>
-      <div
-        class="flex button-wrapper"
-        v-if="provisionDList?.length > 0"
-      >
-        <FeatherButton
-          class="button"
-          text
+      <div v-if="provisionDList?.length > 0">
+        <button
+          class="btn btn-primary"
           @click="addNew"
-          >Add External Requisition</FeatherButton
+        >Add External Requisition
+        </button
         >
       </div>
     </div>
@@ -44,29 +41,24 @@
       :helpState="helpState"
     />
     <ConfigurationDoubleCheckModal
-      :optionSelected="doubleCheck"
-      :doubleCheckSelected="doubleCheckSelected"
+      :options="dialogOptions"
+      :on-button-click="onDialogOptions"
     />
   </div>
 </template>
 
-<script
-  lang="ts"
-  setup
->
+<script lang="ts" setup>
+import ConfigurationDoubleCheckModal, {
+  ConfigurationDoubleCheckModalOptions
+} from '@/components/Configuration/ConfigurationDoubleCheckModal.vue'
 import { useConfigurationStore } from '@/stores/configurationStore'
-
-import { FeatherButton } from '@featherds/button'
-
 import { putProvisionDService } from '@/services/configurationService'
 import { useProvisionD } from './hooks'
 import useSnackbar from '@/composables/useSnackbar'
 import { ConfigurationHelper } from './ConfigurationHelper'
-
 import ConfigurationTable from './ConfigurationTable.vue'
 import ConfigurationEmptyTable from './ConfigurationEmptyTable.vue'
 import ConfigurationDrawer from './ConfigurationDrawer.vue'
-import ConfigurationDoubleCheckModal from './ConfigurationDoubleCheckModal.vue'
 import { RequisitionData } from './copy/requisitionTypes'
 
 const configurationStore = useConfigurationStore()
@@ -82,7 +74,7 @@ let advancedActive = reactive({ active: false })
 const requisitionDCount = computed(() =>
   provisionDList?.value?.length > 0 ? `(${provisionDList?.value?.length})` : ''
 )
-const doubleCheck = reactive({ active: false, index: -1, title: '' })
+const dialogOptions = reactive({ active: false, index: -1, configName: '' } as ConfigurationDoubleCheckModalOptions)
 
 /**
  * Hooks
@@ -131,9 +123,9 @@ const editClicked = (index: number) => {
  * User has decided to delete a table entry.
  */
 const deleteClicked = (index: string) => {
-  doubleCheck.active = true
-  doubleCheck.index = parseInt(index)
-  doubleCheck.title = provisionDList?.value[doubleCheck?.index]?.[RequisitionData.ImportName]
+  dialogOptions.active = true
+  dialogOptions.index = parseInt(index)
+  dialogOptions.configName = provisionDList?.value[dialogOptions?.index]?.[RequisitionData.ImportName]
 }
 
 /**
@@ -179,7 +171,7 @@ const saveCurrentState = async () => {
   selectedProvisionDItem.errors = ConfigurationHelper.createBlankErrors()
 
   // Validate the local state.
-  const validatedItem = ConfigurationHelper.validateLocalItem(selectedProvisionDItem?.config, provisionDList.value,activeIndex.index)
+  const validatedItem = ConfigurationHelper.validateLocalItem(selectedProvisionDItem?.config, provisionDList.value, activeIndex.index)
 
   // If we're valid.
   if (!validatedItem.hasErrors) {
@@ -235,12 +227,12 @@ const saveCurrentState = async () => {
  * The user has made their deletion chicken switch/double check selection.
  * @param selection Did the user choose to delete or not?
  */
-const doubleCheckSelected = async (selection: boolean) => {
+const onDialogOptions = async (selection: boolean) => {
   // The user opted to delete the entry
   if (selection) {
     // Update the local state to remove the value.
     const copiedList = [...provisionDList.value]
-    copiedList.splice(doubleCheck.index, 1)
+    copiedList.splice(dialogOptions.index, 1)
 
     // Get a copy of the existing state.
     const updatedProvisionDData = configurationStore.provisionDService
@@ -266,8 +258,8 @@ const doubleCheckSelected = async (selection: boolean) => {
     await configurationStore.getProvisionDService()
   }
 
-  doubleCheck.active = false
-  doubleCheck.index = -1
+  dialogOptions.active = false
+  dialogOptions.index = -1
 }
 
 /**
@@ -292,33 +284,5 @@ const advanceActiveUpdate = (newVal: boolean) => {
   lang="scss"
   scoped
 >
-@import "@featherds/styles/themes/variables";
-@import "@featherds/styles/mixins/typography";
-@import "@featherds/styles/mixins/elevation";
-
-.title {
-  @include headline3();
-}
-.title-padding {
-  margin: 20px;
-}
-.margin-bottom {
-  margin-bottom: 20px;
-}
-.white-bg {
-  background-color: var($background);
-  border: 1px solid #ebedf0;
-  margin-top: 16px;
-  margin-bottom: 24px;
-  @include elevation(2);
-}
-.flex {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.buttonIcon {
-  font-size: 24px;
-}
 </style>
 
