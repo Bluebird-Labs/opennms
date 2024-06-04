@@ -183,7 +183,7 @@ public class MockEventWriter implements EventProcessor, InitializingBean {
         } catch (final DataAccessException e) {
             throw new EventProcessorException(e);
         }
-        oe.setSeverityLabel(event.getSeverity());
+        oe.setSeverityByLabel(event.getSeverity());
         oe.setEventSnmp(SnmpInfo.format(event.getSnmp(), EVENT_SNMP_FIELD_SIZE));
         oe.setEventSnmpHost(EventDatabaseConstants.format(event.getSnmphost(), EVENT_SNMPHOST_FIELD_SIZE));
         oe.setEventSource(event.getSource());

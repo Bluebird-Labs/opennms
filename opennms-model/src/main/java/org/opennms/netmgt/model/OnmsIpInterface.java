@@ -307,36 +307,38 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
         m_ipLastCapsdPoll = iplastcapsdpoll;
     }
 
-    @Column(name="isSnmpPrimary", length=1)
+    @Column(name="isSnmpPrimary", length=100)
     @XmlAttribute(name="snmpPrimary")
-    @Type(type="org.opennms.netmgt.model.CharacterUserType")
-    public String getSnmpPrimary() {
-        final PrimaryType type = m_isSnmpPrimary == null? PrimaryType.NOT_ELIGIBLE : m_isSnmpPrimary;
-        return type.getCode();
+    public PrimaryType getSnmpPrimary() {
+        return m_isSnmpPrimary;
     }
 
+    public void setSnmpPrimary(PrimaryType primaryType) {
+        m_isSnmpPrimary = primaryType == null ? PrimaryType.NOT_ELIGIBLE : primaryType;
+    }
+
+    /**
+     * @deprecated Use {@link #setSnmpPrimary(PrimaryType)} instead.
+     */
+    @Deprecated(forRemoval = true)
     public void setSnmpPrimary(final String primary) {
         this.m_isSnmpPrimary = PrimaryType.get(primary);
     }
 
     /**
-     * <p>getIsSnmpPrimary</p>
-     *
-     * @return a {@link org.opennms.netmgt.model.PrimaryType} object.
+     * @deprecated Use {@link #setSnmpPrimary(PrimaryType)} in favor of this instead.
      */
-    @XmlTransient
-    @Transient
-    public PrimaryType getIsSnmpPrimary() {
-        return m_isSnmpPrimary == null? PrimaryType.NOT_ELIGIBLE : m_isSnmpPrimary;
+    @Deprecated(forRemoval = true)
+    public void setIsSnmpPrimary(PrimaryType primaryType) {
+        setSnmpPrimary(primaryType);
     }
 
     /**
-     * <p>setIsSnmpPrimary</p>
-     *
-     * @param issnmpprimary a {@link org.opennms.netmgt.model.PrimaryType} object.
+     * @deprecated Use {@link #setSnmpPrimary(PrimaryType)} in favor of this instead.
      */
-    public void setIsSnmpPrimary(PrimaryType issnmpprimary) {
-        m_isSnmpPrimary = issnmpprimary;
+    @Deprecated(forRemoval = true)
+    public PrimaryType getIsSnmpPrimary() {
+        return getSnmpPrimary();
     }
 
     /**
@@ -767,5 +769,4 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
         }
         return null;
     }
-
 }

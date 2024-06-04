@@ -22,13 +22,12 @@
 package org.opennms.netmgt.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * OpenNMS severity enumeration.
+ * Enum for severities.
  *
  * @author <a href="mailto:dj@opennms.org">DJ Gregor</a>
  */
@@ -42,127 +41,66 @@ public enum OnmsSeverity implements Serializable {
     MAJOR(6, "Major", "orange"),
     CRITICAL(7, "Critical", "red");
     
-    private static final Map<Integer, OnmsSeverity> m_idMap; 
-    
-    private int m_id;
-    private String m_label;
-    private String m_color;
+    private final int id;
+    private final String label;
+    private final String color;
 
-    static {
-        m_idMap = new HashMap<Integer, OnmsSeverity>(values().length);
-        for (final OnmsSeverity severity : values()) {
-            m_idMap.put(severity.getId(), severity);
-        }
+    OnmsSeverity(final int id, final String label, final String color) {
+        this.id = id;
+        this.label = label;
+        this.color = color;
     }
 
-    private OnmsSeverity(final int id, final String label, final String color) {
-        m_id = id;
-        m_label = label;
-        m_color = color;
-    }
-    
-    /**
-     * <p>getId</p>
-     *
-     * @return a int.
-     */
     public int getId() {
-        return m_id;
+        return id;
     }
     
-    /**
-     * <p>getLabel</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public String getLabel() {
-        return m_label;
+        return label;
     }
 
-    /**
-     * <p>getColor</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public String getColor() {
-        return m_color;
+        return color;
     }
 
-    /**
-     * <p>isLessThan</p>
-     *
-     * @param other a {@link org.opennms.netmgt.model.OnmsSeverity} object.
-     * @return a boolean.
-     */
     public boolean isLessThan(final OnmsSeverity other) {
         return compareTo(other) < 0;
     }
 
-    /**
-     * <p>isLessThanOrEqual</p>
-     *
-     * @param other a {@link org.opennms.netmgt.model.OnmsSeverity} object.
-     * @return a boolean.
-     */
     public boolean isLessThanOrEqual(final OnmsSeverity other) {
         return compareTo(other) <= 0;
     }
 
-    /**
-     * <p>isGreaterThan</p>
-     *
-     * @param other a {@link org.opennms.netmgt.model.OnmsSeverity} object.
-     * @return a boolean.
-     */
     public boolean isGreaterThan(final OnmsSeverity other) {
         return compareTo(other) > 0;
     }
     
-    /**
-     * <p>isGreaterThanOrEqual</p>
-     *
-     * @param other a {@link org.opennms.netmgt.model.OnmsSeverity} object.
-     * @return a boolean.
-     */
     public boolean isGreaterThanOrEqual(final OnmsSeverity other) {
         return compareTo(other) >= 0;
     }
     
-    /**
-     * <p>get</p>
-     *
-     * @param id a int.
-     * @return a {@link org.opennms.netmgt.model.OnmsSeverity} object.
-     */
     public static OnmsSeverity get(final int id) {
-        if (m_idMap.containsKey(id)) {
-            return m_idMap.get(id);
-        } else {
-            throw new IllegalArgumentException("Cannot create OnmsSeverity from unknown ID " + id);
-        }
+        return Stream.of(values())
+                .filter(it -> it.getId() == id)
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("Cannot create OnmsSeverity from unknown ID " + id));
     }
 
-    /**
-     * <p>get</p>
-     *
-     * @param label a {@link java.lang.String} object.
-     * @return a {@link org.opennms.netmgt.model.OnmsSeverity} object.
-     */
     public static OnmsSeverity get(final String label) {
-        for (final Integer key : m_idMap.keySet()) {
-            if (m_idMap.get(key).getLabel().equalsIgnoreCase(label)) {
-                return m_idMap.get(key);
-            }
-        }
-        return OnmsSeverity.INDETERMINATE;
+        return Stream.of(values())
+                .filter(it -> it.getLabel().equalsIgnoreCase(label))
+                .findAny().orElse(OnmsSeverity.INDETERMINATE);
     }
 
     /**
-     * <p>escalate</p>
-     *
-     * @param sev a {@link org.opennms.netmgt.model.OnmsSeverity} object.
-     * @return a {@link org.opennms.netmgt.model.OnmsSeverity} object.
+     * Temporary added for easier migration, but this is no longer needed.
+     * @deprecated Use instance directly instead of wrapping in get method
      */
+    @Deprecated(forRemoval = true)
+    public static OnmsSeverity get(OnmsSeverity eventSeverity) {
+        return eventSeverity;
+    }
+
     public static OnmsSeverity escalate(final OnmsSeverity sev) {
         if (sev.isLessThan(OnmsSeverity.CRITICAL)) {
             return OnmsSeverity.get(sev.getId()+1);
@@ -172,10 +110,8 @@ public enum OnmsSeverity implements Serializable {
     }
 
     public static List<String> names() {
-        final List<String> names = new ArrayList<>();
-        for (final OnmsSeverity value : values()) {
-            names.add(value.toString());
-        }
-        return names;
+        return Stream.of(values()).map(Enum::toString)
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

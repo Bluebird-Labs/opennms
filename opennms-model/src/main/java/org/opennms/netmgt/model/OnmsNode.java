@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
@@ -44,6 +45,8 @@ import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -359,8 +362,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
         public String toString() {
             return String.valueOf(value);
         }
-        
-        public static NodeType getNodeTypeFromChar(char c) {
+
+        public static NodeType create(char c) {
             for (NodeType nodeType: NodeType.values()) {
                 if (nodeType.value == c)
                     return nodeType;
@@ -370,12 +373,11 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
 
         @JsonCreator
         public static NodeType create(String s) {
-            if (s == null || s.length() == 0) return null;
-            for (NodeType nodeType: NodeType.values()) {
-                if (nodeType.value == s.charAt(0))
-                    return nodeType;
-            }
-            return null;
+            if (s == null || s.isEmpty()) return null;
+            return Stream.of(NodeType.values())
+                    .filter(it -> it.value == s.charAt(0))
+                    .findAny()
+                    .orElse(null);
         }
 
     }
@@ -390,9 +392,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      * @return a {@link java.lang.String} object.
      */
     @XmlAttribute(name="type")
-    @Column(name="nodeType", length=1)
-    @Type(type="org.opennms.netmgt.model.NodeTypeUserType")
-    //@XmlJavaTypeAdapter(NodeTypeXmlAdapter.class)
+    @Column(name="nodeType", length=100)
+    @Enumerated(EnumType.STRING)
     public NodeType getType() {
         return m_type;
     }
@@ -653,9 +654,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      * @return a {@link java.lang.String} object.
      */
     @XmlElement(name="labelSource")
-    @Column(name="nodeLabelSource", length=1)
-    @Type(type="org.opennms.netmgt.model.NodeLabelSourceUserType")
-    //@XmlJavaTypeAdapter(NodeLabelSourceXmlAdapter.class)
+    @Column(name="nodeLabelSource", length=100)
+    @Enumerated(EnumType.STRING)
     public NodeLabelSource getLabelSource() {
         return m_labelSource;
     }

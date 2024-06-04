@@ -125,7 +125,7 @@ public class DefaultAckServiceIT implements InitializingBean {
         alarm.setLogMsg(event.getEventLogMsg());
         alarm.setMouseOverText(event.getEventMouseOverText());
         alarm.setNode(dbNode);
-        alarm.setSeverityId(event.getEventSeverity());
+        alarm.setSeverity(event.getEventSeverity());
         alarm.setUei(event.getEventUei());
         alarm.setCounter(1);
         m_alarmDao.save(alarm);

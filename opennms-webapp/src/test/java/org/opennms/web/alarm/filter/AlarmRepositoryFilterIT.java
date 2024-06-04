@@ -411,7 +411,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         OnmsAlarm alarm = new OnmsAlarm();
         alarm.setUei("uei.opennms.org/vendor/Juniper/traps/jnxVpnIfUp");
         alarm.setLastEvent(event1);
-        alarm.setSeverityId(3);
+        alarm.setSeverityById(3);
         alarm.setDistPoller(poller);
         alarm.setCounter(100);
         alarm.setLastEvent(event1);
@@ -423,7 +423,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         OnmsAlarm alarm2 = new OnmsAlarm();
         alarm2.setUei("uei.opennms.org/vendor/Juniper/traps/jnxVpnIfUp");
         alarm2.setLastEvent(event2);
-        alarm2.setSeverityId(3);
+        alarm2.setSeverityById(3);
         alarm2.setDistPoller(poller);
         alarm2.setCounter(100);
         alarm2.setLastEvent(event2);
@@ -499,7 +499,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         OnmsAlarm alarm = new OnmsAlarm();
         alarm.setUei("uei.opennms.org/vendor/Juniper/traps/jnxVpnIfUp");
         alarm.setLastEvent(event1);
-        alarm.setSeverityId(3);
+        alarm.setSeverityById(3);
         alarm.setDistPoller(poller);
         alarm.setCounter(100);
         alarm.setLastEvent(event1);
@@ -511,7 +511,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         OnmsAlarm alarm2 = new OnmsAlarm();
         alarm2.setUei("uei.opennms.org/vendor/Juniper/traps/jnxVpnIfUp");
         alarm2.setLastEvent(event2);
-        alarm2.setSeverityId(3);
+        alarm2.setSeverityById(3);
         alarm2.setDistPoller(poller);
         alarm2.setCounter(100);
         alarm2.setLastEvent(event2);
@@ -541,7 +541,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         event.setEventCreateTime(new Date());
         event.setDistPoller(poller);
         event.setEventTime(new Date());
-        event.setEventSeverity(OnmsSeverity.CRITICAL.getId());
+        event.setEventSeverity(OnmsSeverity.CRITICAL);
         event.setEventUei("uei://org/opennms/test/EventDaoTest");
         event.setEventSource("test");
         m_dbPopulator.getEventDao().save(event);
@@ -552,7 +552,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         final OnmsAlarm alarm1 = new OnmsAlarm();
         alarm1.setNode(node);
         alarm1.setUei(event.getEventUei());
-        alarm1.setSeverityId(event.getEventSeverity());
+        alarm1.setSeverity(event.getEventSeverity());
         alarm1.setFirstEventTime(event.getEventTime());
         alarm1.setLastEvent(event);
         alarm1.setCounter(1);
@@ -563,7 +563,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         final OnmsAlarm alarm2 = new OnmsAlarm();
         alarm2.setNode(node);
         alarm2.setUei(event.getEventUei());
-        alarm2.setSeverityId(event.getEventSeverity());
+        alarm2.setSeverity(event.getEventSeverity());
         alarm2.setFirstEventTime(event.getEventTime());
         alarm2.setLastEvent(event);
         alarm2.setCounter(1);
@@ -622,7 +622,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         event.setEventCreateTime(new Date());
         event.setDistPoller(poller);
         event.setEventTime(new Date());
-        event.setEventSeverity(OnmsSeverity.CRITICAL.getId());
+        event.setEventSeverity(OnmsSeverity.CRITICAL);
         event.setEventUei("uei://org/opennms/test/EventDaoTest");
         event.setEventSource("test");
         m_dbPopulator.getEventDao().save(event);
@@ -633,7 +633,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         final OnmsAlarm alarm1 = new OnmsAlarm();
         alarm1.setNode(node);
         alarm1.setUei(event.getEventUei());
-        alarm1.setSeverityId(event.getEventSeverity());
+        alarm1.setSeverity(event.getEventSeverity());
         alarm1.setFirstEventTime(event.getEventTime());
         alarm1.setLastEvent(event);
         alarm1.setCounter(1);
@@ -644,7 +644,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         final OnmsAlarm alarm2 = new OnmsAlarm();
         alarm2.setNode(node);
         alarm2.setUei(event.getEventUei());
-        alarm2.setSeverityId(event.getEventSeverity());
+        alarm2.setSeverity(event.getEventSeverity());
         alarm2.setFirstEventTime(event.getEventTime());
         alarm2.setLastEvent(event);
         alarm2.setCounter(1);
@@ -656,7 +656,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
         final OnmsAlarm alarm3 = new OnmsAlarm();
         alarm3.setNode(node);
         alarm3.setUei(event.getEventUei());
-        alarm3.setSeverityId(event.getEventSeverity());
+        alarm3.setSeverity(event.getEventSeverity());
         alarm3.setFirstEventTime(event.getEventTime());
         alarm3.setLastEvent(event);
         alarm3.setCounter(1);
@@ -670,7 +670,7 @@ public class AlarmRepositoryFilterIT implements InitializingBean {
             final OnmsAlarm alarm = new OnmsAlarm();
             alarm.setNode(node);
             alarm.setUei(event.getEventUei());
-            alarm.setSeverityId(event.getEventSeverity());
+            alarm.setSeverity(event.getEventSeverity());
             alarm.setFirstEventTime(event.getEventTime());
             alarm.setLastEvent(event);
             alarm.setCounter(1);

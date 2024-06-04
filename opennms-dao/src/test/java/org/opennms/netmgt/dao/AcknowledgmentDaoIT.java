@@ -150,7 +150,7 @@ public class AcknowledgmentDaoIT implements InitializingBean {
         event.setEventCreateTime(new Date());
         event.setDistPoller(m_distPollerDao.whoami());
         event.setEventTime(new Date());
-        event.setEventSeverity(OnmsSeverity.CRITICAL.getId());
+        event.setEventSeverity(OnmsSeverity.CRITICAL);
         event.setEventUei("uei://org/opennms/test/EventDaoTest");
         event.setEventSource("test");
         m_eventDao.save(event);
@@ -161,7 +161,7 @@ public class AcknowledgmentDaoIT implements InitializingBean {
         
         alarm.setNode(node);
         alarm.setUei(event.getEventUei());
-        alarm.setSeverityId(event.getEventSeverity());
+        alarm.setSeverity(event.getEventSeverity());
         alarm.setFirstEventTime(event.getEventTime());
         alarm.setLastEvent(event);
         alarm.setCounter(new Integer(1));

@@ -206,7 +206,7 @@ public class JmsNorthBounderIT {
                 onmsAlarm.setId(i);
                 onmsAlarm.setUei("uei.opennms.org/test/jmsNorthBounder");
                 onmsAlarm.setNode(node);
-                onmsAlarm.setSeverityId(i);
+                onmsAlarm.setSeverityById(i);
                 onmsAlarm.setIpAddr(InetAddress.getByName("127.0.0.1"));
                 onmsAlarm.setCounter(i);
                 onmsAlarm.setLogMsg("Node Down");

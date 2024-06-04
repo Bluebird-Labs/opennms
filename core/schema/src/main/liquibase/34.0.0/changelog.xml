@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- Table for severity lookups -->
+    <changeSet author="mvrueden" id="34.0.0-severity-lookup">
+        <createTable tableName="severities" remarks="severities for id or priority lookup">
+            <column name="id" type="integer">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="name" type="varchar(100)">
+                <constraints unique="true" nullable="false" />
+            </column>
+            <column name="label" type="varchar(100)">
+                <constraints unique="true" nullable="false" />
+            </column>
+        </createTable>
+        <!-- there is no rollback required for this -->
+        <sql>
+            INSERT INTO severities (id, name, label)
+            VALUES
+                (1, 'INDETERMINATE', 'Indeterminate'),
+                (2, 'CLEARED', 'Cleared'),
+                (3, 'NORMAL', 'Normal'),
+                (4, 'WARNING', 'Warning'),
+                (5, 'MINOR', 'Minor'),
+                (6, 'MAJOR', 'Major'),
+                (7, 'CRITICAL', 'Critical')
+        </sql>
+    </changeSet>
+
+    <!-- Migrate event severity from integer to varchar (enum) -->
+    <changeSet author="mvrueden" id="34.0.0-events-severity">
+        <!-- drop views depending on event severities -->
+        <dropView viewName="node_outages"/>
+        <dropView viewName="node_outage_status"/>
+        <modifyDataType tableName="events" columnName="eventseverity" newDataType="varchar(100)" />
+        <sql>
+            UPDATE events SET eventseverity = (select name from severities where id = events.eventseverity::integer)
+        </sql>
+        <!-- recreate dropped views -->
+        <createView replaceIfExists="true" viewName="node_outage_status">
+            SELECT nodeid,
+                   max_outage_severity,
+                   (SELECT name FROM severities s WHERE id = max_outage_severity) AS max_outage_severity_name
+            FROM (
+                    SELECT
+                        node.nodeid as nodeid,
+                        (CASE WHEN severityid IS NULL OR severityid &lt; 3 THEN 3 ELSE severityid END) AS max_outage_severity,
+                        (SELECT s.name FROM severities s WHERE s.id = severityid) AS max_outage_severity_name
+                    FROM
+                        (
+                            SELECT events.nodeid,
+                                   max(severities.id) AS severityid
+                            FROM events
+                            JOIN severities ON severities.label = events.eventseverity
+                            JOIN outages ON outages.svclosteventid = events.eventid
+                            WHERE outages.ifregainedservice IS NULL
+                            GROUP BY events.nodeid
+                        ) AS tmp
+                        RIGHT JOIN node ON tmp.nodeid = node.nodeid
+                ) AS tmp2
+        </createView>
+        <createView replaceIfExists="true" viewName="node_outages">
+            SELECT outages.outageid,
+                   outages.svclosteventid,
+                   outages.svcregainedeventid,
+                   outages.iflostservice,
+                   outages.ifregainedservice,
+                   outages.ifserviceid,
+                   e.eventuei                                                                                 AS svclosteventuei,
+                   e.eventsource,
+                   e.alarmid,
+                   e.eventseverity,
+                   severities.id                                                                              AS eventseverityid,
+                   outages.ifregainedservice IS NOT NULL                                                      AS resolved,
+                   s.servicename,
+                   i.serviceid,
+                   ipif.ipaddr,
+                   COALESCE(outages.ifregainedservice - outages.iflostservice, now() - outages.iflostservice) AS duration,
+                   nos.max_outage_severity,
+                   nc.nodeid,
+                   nc.nodecreatetime,
+                   nc.nodeparentid,
+                   nc.nodetype,
+                   nc.nodesysoid,
+                   nc.nodesysname,
+                   nc.nodesysdescription,
+                   nc.nodesyslocation,
+                   nc.nodesyscontact,
+                   nc.nodelabel,
+                   nc.nodelabelsource,
+                   nc.nodenetbiosname,
+                   nc.nodedomainname,
+                   nc.operatingsystem,
+                   nc.lastcapsdpoll,
+                   nc.foreignsource,
+                   nc.foreignid,
+                   nc.location,
+                   nc.last_ingress_flow,
+                   nc.last_egress_flow,
+                   nc.categoryname
+            FROM outages
+                     JOIN events e ON outages.svclosteventid = e.eventid
+                     JOIN ifservices i ON outages.ifserviceid = i.id
+                     JOIN service s ON i.serviceid = s.serviceid
+                     JOIN ipinterface ipif ON i.ipinterfaceid = ipif.id
+                     JOIN node_categories nc ON nc.nodeid = e.nodeid
+                     JOIN node_outage_status nos ON nc.nodeid = nos.nodeid
+                     JOIN severities ON severities.name = e.eventseverity
+            WHERE outages.perspective IS NULL;
+        </createView>
+        <rollback>
+            <!-- drop views as they are recreated later -->
+            <dropView viewName="node_outages"/>
+            <dropView viewName="node_outage_status"/>
+            <!-- revert values to previous integer, but as varchar -->
+            <sql>
+                UPDATE events SET eventseverity = (select id from severities where name = events.eventseverity);
+            </sql>
+            <!-- apply column type change -->
+            <modifyDataType tableName="events" columnName="eventseverity" newDataType="integer" />
+            <!-- recreate views -->
+            <createView replaceIfExists="true" viewName="node_outage_status">
+                SELECT
+                node.nodeid,
+                (CASE WHEN severity IS NULL OR severity &lt; 3 THEN 3 ELSE severity END) AS max_outage_severity
+                FROM
+                (
+                SELECT events.nodeid, max(events.eventseverity) AS severity
+                FROM events
+                JOIN outages ON outages.svclosteventid = events.eventid
+                WHERE outages.ifregainedservice IS NULL AND outages.perspective IS NULL
+                GROUP BY events.nodeid
+                ) AS tmp
+                RIGHT JOIN node ON tmp.nodeid = node.nodeid
+            </createView>
+            <createView replaceIfExists="true" viewName="node_outages">
+                SELECT
+                outages.outageid,
+                outages.svclosteventid,
+                outages.svcregainedeventid,
+                outages.iflostservice,
+                outages.ifregainedservice,
+                outages.ifserviceid,
+                e.eventuei AS svclosteventuei,
+                e.eventsource,
+                e.alarmid,
+                e.eventseverity,
+                (ifregainedservice NOTNULL) AS resolved,
+                s.servicename,
+                i.serviceid,
+                ipif.ipaddr,
+                COALESCE(outages.ifregainedservice - outages.iflostservice, now() - outages.iflostservice) AS duration,
+                nos.max_outage_severity,
+                nc.*
+                FROM
+                outages
+                JOIN
+                events e
+                ON
+                outages.svclosteventid = e.eventid
+                JOIN
+                ifservices i
+                ON
+                outages.ifserviceid = i.id
+                JOIN
+                service s
+                ON
+                i.serviceid = s.serviceid
+                JOIN
+                ipinterface ipif
+                ON
+                i.ipinterfaceid = ipif.id
+                JOIN
+                node_categories nc
+                ON
+                nc.nodeid = e.nodeid
+                JOIN
+                node_outage_status nos
+                ON
+                nc.nodeid = nos.nodeid
+                WHERE
+                outages.perspective IS NULL
+            </createView>
+        </rollback>
+    </changeSet>
+
+    <!-- Migrate alarm severity from integer to varchar (enum) -->
+    <changeSet author="mvrueden" id="34.0.0-alarms-severity">
+        <dropView viewName="node_alarms" />
+        <dropView viewName="node_alarm_status" />
+        <modifyDataType tableName="alarms" columnName="severity" newDataType="varchar(100)" />
+        <sql>
+            UPDATE alarms SET severity = (select name from severities where id = alarms.severity::integer)
+        </sql>
+        <createView replaceIfExists="true" viewName="node_alarm_status"><![CDATA[
+            SELECT nodeid,
+                   COALESCE((SELECT max(
+                                        CASE
+                                            WHEN severities.id IS NULL OR severities.id < 3 THEN 3
+                                            ELSE severities.id
+                                            END) AS max
+                             FROM alarms
+                             JOIN severities on alarms.severity = severities.name
+                             WHERE alarms.nodeid = node.nodeid), 3) AS max_alarm_severity,
+                   COALESCE((SELECT max(
+                                        CASE
+                                            WHEN severities.id IS NULL OR severities.id < 3 THEN 3
+                                            ELSE severities.id
+                                            END) AS max
+                             FROM alarms
+                             JOIN severities on severities.name = alarms.severity
+                             WHERE alarms.nodeid = node.nodeid
+                               AND alarms.alarmacktime IS NULL), 3) AS max_alarm_severity_unack,
+                   (SELECT count(alarms.alarmid) AS count
+                    FROM alarms
+                    WHERE alarms.nodeid = node.nodeid
+                      AND alarms.alarmacktime IS NULL)              AS alarm_count_unack,
+                   (SELECT count(*) AS count
+                    FROM alarms
+                    WHERE alarms.nodeid = node.nodeid)              AS alarm_count
+            FROM node;
+        ]]></createView>
+        <createView replaceIfExists="true" viewName="node_alarms">
+            SELECT n.nodeid,
+                   n.nodecreatetime,
+                   n.nodeparentid,
+                   n.nodetype,
+                   n.nodesysoid,
+                   n.nodesysname,
+                   n.nodesysdescription,
+                   n.nodesyslocation,
+                   n.nodesyscontact,
+                   n.nodelabel,
+                   n.nodelabelsource,
+                   n.nodenetbiosname,
+                   n.nodedomainname,
+                   n.operatingsystem,
+                   n.lastcapsdpoll,
+                   n.foreignsource,
+                   n.foreignid,
+                   n.location,
+                   a.alarmid,
+                   a.eventuei,
+                   a.ipaddr,
+                   a.reductionkey,
+                   a.alarmtype,
+                   a.counter,
+                   a.severity,
+                   a.lasteventid,
+                   a.firsteventtime,
+                   a.lasteventtime,
+                   a.firstautomationtime,
+                   a.lastautomationtime,
+                   a.description,
+                   a.logmsg,
+                   a.operinstruct,
+                   a.tticketid,
+                   a.tticketstate,
+                   a.suppresseduntil,
+                   a.suppresseduser,
+                   a.suppressedtime,
+                   a.alarmackuser,
+                   a.alarmacktime,
+                   a.managedobjectinstance,
+                   a.managedobjecttype,
+                   a.applicationdn,
+                   a.ossprimarykey,
+                   a.x733alarmtype,
+                   a.qosalarmstate,
+                   a.clearkey,
+                   a.ifindex,
+                   a.stickymemo,
+                   a.systemid,
+                   a.alarmacktime IS NOT NULL                        AS acknowledged,
+                   COALESCE(s_cat.categoryname, 'no category'::text) AS categoryname,
+                   s_cat.categorydescription,
+                   s.servicename,
+                   nas.max_alarm_severity,
+                   (select name from severities where id = nas.max_alarm_severity) as max_alarm_severity_name,
+                   nas.max_alarm_severity_unack,
+                   (select name from severities where id = nas.max_alarm_severity_unack) as max_alarm_severity_unack_name,
+                   nas.alarm_count_unack,
+                   nas.alarm_count
+            FROM node n
+                     JOIN alarms a ON n.nodeid = a.nodeid
+                     JOIN node_alarm_status nas ON a.nodeid = nas.nodeid
+                     LEFT JOIN service s ON a.serviceid = s.serviceid
+                     LEFT JOIN category_node cat ON n.nodeid = cat.nodeid
+                     LEFT JOIN categories s_cat ON cat.categoryid = s_cat.categoryid;
+        </createView>
+        <rollback>
+            <!-- drop views as they are recreated later -->
+            <dropView viewName="node_alarms"/>
+            <dropView viewName="node_alarm_status"/>
+            <!-- revert values to previous integer, but as varchar -->
+            <sql>
+                UPDATE alarms SET severity = (select id from severities where name = alarms.severity);
+            </sql>
+            <!-- apply column type change -->
+            <modifyDataType tableName="alarms" columnName="severity" newDataType="integer" />
+            <!-- recreate views -->
+            <createView replaceIfExists="true" viewName="node_alarm_status"><![CDATA[
+            SELECT nodeid,
+                   COALESCE((SELECT max(
+                                        CASE
+                                            WHEN alarms.severity IS NULL OR alarms.severity < 3 THEN 3
+                                            ELSE alarms.severity
+                                            END) AS max
+                             FROM alarms
+                             WHERE alarms.nodeid = node.nodeid), 3) AS max_alarm_severity,
+                   COALESCE((SELECT max(
+                                        CASE
+                                            WHEN alarms.severity IS NULL OR alarms.severity < 3 THEN 3
+                                            ELSE alarms.severity
+                                            END) AS max
+                             FROM alarms
+                             WHERE alarms.nodeid = node.nodeid
+                               AND alarms.alarmacktime IS NULL), 3) AS max_alarm_severity_unack,
+                   (SELECT count(alarms.alarmid) AS count
+                    FROM alarms
+                    WHERE alarms.nodeid = node.nodeid
+                      AND alarms.alarmacktime IS NULL)              AS alarm_count_unack,
+                   (SELECT count(*) AS count
+                    FROM alarms
+                    WHERE alarms.nodeid = node.nodeid)              AS alarm_count
+            FROM node;
+        ]]></createView>
+            <createView replaceIfExists="true" viewName="node_alarms">
+                SELECT n.nodeid,
+                n.nodecreatetime,
+                n.nodeparentid,
+                n.nodetype,
+                n.nodesysoid,
+                n.nodesysname,
+                n.nodesysdescription,
+                n.nodesyslocation,
+                n.nodesyscontact,
+                n.nodelabel,
+                n.nodelabelsource,
+                n.nodenetbiosname,
+                n.nodedomainname,
+                n.operatingsystem,
+                n.lastcapsdpoll,
+                n.foreignsource,
+                n.foreignid,
+                n.location,
+                a.alarmid,
+                a.eventuei,
+                a.ipaddr,
+                a.reductionkey,
+                a.alarmtype,
+                a.counter,
+                a.severity,
+                a.lasteventid,
+                a.firsteventtime,
+                a.lasteventtime,
+                a.firstautomationtime,
+                a.lastautomationtime,
+                a.description,
+                a.logmsg,
+                a.operinstruct,
+                a.tticketid,
+                a.tticketstate,
+                a.suppresseduntil,
+                a.suppresseduser,
+                a.suppressedtime,
+                a.alarmackuser,
+                a.alarmacktime,
+                a.managedobjectinstance,
+                a.managedobjecttype,
+                a.applicationdn,
+                a.ossprimarykey,
+                a.x733alarmtype,
+                a.qosalarmstate,
+                a.clearkey,
+                a.ifindex,
+                a.stickymemo,
+                a.systemid,
+                a.alarmacktime IS NOT NULL                        AS acknowledged,
+                COALESCE(s_cat.categoryname, 'no category'::text) AS categoryname,
+                s_cat.categorydescription,
+                s.servicename,
+                nas.max_alarm_severity,
+                nas.max_alarm_severity_unack,
+                nas.alarm_count_unack,
+                nas.alarm_count
+                FROM node n
+                JOIN alarms a ON n.nodeid = a.nodeid
+                JOIN node_alarm_status nas ON a.nodeid = nas.nodeid
+                LEFT JOIN service s ON a.serviceid = s.serviceid
+                LEFT JOIN category_node cat ON n.nodeid = cat.nodeid
+                LEFT JOIN categories s_cat ON cat.categoryid = s_cat.categoryid;
+            </createView>
+        </rollback>
+    </changeSet>
+
+    <!-- Migrate ipinterface snmp primary from char to varchar (enum) -->
+<!--    <changeSet author="mvrueden" id="34.0.0-ipinterface-primarytype">-->
+<!--        <modifyDataType tableName="ipinterface" columnName="issnmpprimary" newDataType="varchar(100)" />-->
+<!--        <sql>-->
+<!--            <![CDATA[-->
+<!--                UPDATE ipinterface SET issnmpprimary = 'NOT_ELIGIBLE'   where issnmpprimary = 'N';-->
+<!--                UPDATE ipinterface SET issnmpprimary = 'PRIMARY'        where issnmpprimary = 'P';-->
+<!--                UPDATE ipinterface SET issnmpprimary = 'SECONDARY'      where issnmpprimary = 'S';-->
+<!--            ]]>-->
+<!--        </sql>-->
+<!--        <rollback>-->
+<!--            <sql>-->
+<!--                <![CDATA[-->
+<!--                    UPDATE ipinterface SET issnmpprimary = 'N' where issnmpprimary = 'NOT_ELIGIBLE';-->
+<!--                    UPDATE ipinterface SET issnmpprimary = 'P' where issnmpprimary = 'PRIMARY';-->
+<!--                    UPDATE ipinterface SET issnmpprimary = 'S' where issnmpprimary = 'SECONDARY';-->
+<!--                ]]>-->
+<!--            </sql>-->
+<!--            <modifyDataType tableName="ipinterface" columnName="issnmpprimary" newDataType="char" />-->
+<!--        </rollback>-->
+<!--    </changeSet>-->
+
+    <!-- Migrate node type from char to varchar (enum) -->
+<!--    <changeSet author="mvrueden" id="34.0.0-node-nodetype">-->
+<!--        <modifyDataType tableName="node" columnName="nodetype" newDataType="varchar(100)" />-->
+<!--        <sql>-->
+<!--            <![CDATA[-->
+<!--                UPDATE node SET nodetype = 'ACTIVE'     where nodetype = 'A';-->
+<!--                UPDATE node SET nodetype = 'DELETED'    where nodetype = 'D';-->
+<!--                UPDATE node SET nodetype = 'UNKNOWN'    where nodetype = ' ';-->
+<!--            ]]>-->
+<!--        </sql>-->
+<!--        <rollback>-->
+<!--            <sql>-->
+<!--                <![CDATA[-->
+<!--                    UPDATE node SET nodetype = 'A' where nodetype = 'ACTIVE';-->
+<!--                    UPDATE node SET nodetype = 'D' where nodetype = 'DELETED';-->
+<!--                    UPDATE node SET nodetype = ' ' where nodetype = 'UNKNOWN';-->
+<!--                ]]>-->
+<!--            </sql>-->
+<!--            <modifyDataType tableName="node" columnName="nodetype" newDataType="char" />-->
+<!--        </rollback>-->
+<!--    </changeSet>-->
+
+    <!-- Migrate node type from char to varchar (enum) -->
+<!--    <changeSet author="mvrueden" id="34.0.0-node-nodelabelsource">-->
+<!--        <modifyDataType tableName="node" columnName="nodelabelsource" newDataType="varchar(100)" />-->
+<!--        <sql>-->
+<!--            <![CDATA[-->
+<!--            UPDATE node SET nodelabelsource = 'USER'        where nodelabelsource = 'U';-->
+<!--            UPDATE node SET nodelabelsource = 'NETBIOS'     where nodelabelsource = 'N';-->
+<!--            UPDATE node SET nodelabelsource = 'HOSTNAME'    where nodelabelsource = 'H';-->
+<!--            UPDATE node SET nodelabelsource = 'SYSNAME'     where nodelabelsource = 'S';-->
+<!--            UPDATE node SET nodelabelsource = 'ADDRESS'     where nodelabelsource = 'A';-->
+<!--            UPDATE node SET nodelabelsource = 'UNKNOWN'     where nodelabelsource = ' ';-->
+<!--            ]]>-->
+<!--        </sql>-->
+<!--        <rollback>-->
+<!--            <sql>-->
+<!--                <![CDATA[-->
+<!--                    UPDATE node SET nodelabelsource = 'U' where nodelabelsource = 'USER';-->
+<!--                    UPDATE node SET nodelabelsource = 'N' where nodelabelsource = 'NETBIOS';-->
+<!--                    UPDATE node SET nodelabelsource = 'H' where nodelabelsource = 'HOSTNAME';-->
+<!--                    UPDATE node SET nodelabelsource = 'S' where nodelabelsource = 'SYSNAME';-->
+<!--                    UPDATE node SET nodelabelsource = 'A' where nodelabelsource = 'ADDRESS';-->
+<!--                    UPDATE node SET nodelabelsource = ' ' where nodelabelsource = 'UNKNOWN';-->
+<!--                ]]>-->
+<!--            </sql>-->
+<!--            <modifyDataType tableName="node" columnName="nodelabelsource" newDataType="char" />-->
+<!--        </rollback>-->
+<!--    </changeSet>-->
+</databaseChangeLog>

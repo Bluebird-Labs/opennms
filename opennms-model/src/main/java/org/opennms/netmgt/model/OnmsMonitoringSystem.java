@@ -227,31 +227,6 @@ public class OnmsMonitoringSystem implements Serializable {
         m_lastUpdated = lastUpdated;
     }
 
-    /**
-     * IP address of the distributed poller.
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    /*
-    @Column(name="ipaddr", nullable=false)
-    @Type(type="org.opennms.netmgt.model.InetAddressUserType")
-    public final InetAddress getIpAddress() {
-        return m_ipAddress;
-    }
-    */
-
-    /**
-     * <p>setIpAddress</p>
-     *
-     * @param ipAddress a {@link java.lang.String} object.
-     */
-    /*
-    public final void setIpAddress(InetAddress ipAddress) {
-        m_ipAddress = ipAddress;
-    }
-    */
-
-    
     @ElementCollection
     @JoinTable(name="monitoringSystemsProperties", joinColumns = @JoinColumn(name="monitoringSystemId"))
     @MapKeyColumn(name="property", nullable=false)

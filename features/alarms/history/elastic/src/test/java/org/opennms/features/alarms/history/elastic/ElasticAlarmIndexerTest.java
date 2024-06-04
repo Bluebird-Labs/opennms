@@ -52,7 +52,7 @@ public class ElasticAlarmIndexerTest {
         // Check to make sure updating each of the fields we expect to cause a re-index actually does
         updateAndTestPositive(onmsAlarm, () -> onmsAlarm.setReductionKey("test"));
         updateAndTestPositive(onmsAlarm, () -> onmsAlarm.setAlarmAckTime(new Date(System.currentTimeMillis())));
-        updateAndTestPositive(onmsAlarm, () -> onmsAlarm.setSeverityId(2));
+        updateAndTestPositive(onmsAlarm, () -> onmsAlarm.setSeverityById(2));
         updateAndTestPositive(onmsAlarm, () -> onmsAlarm.addRelatedAlarm(new OnmsAlarm()));
         updateAndTestPositive(onmsAlarm, () -> onmsAlarm.setStickyMemo(new OnmsMemo()));
         updateAndTestPositive(onmsAlarm, () -> onmsAlarm.setReductionKeyMemo(new OnmsReductionKeyMemo()));

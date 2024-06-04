@@ -28,12 +28,15 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -44,7 +47,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -146,8 +148,9 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 	private String eventLogMsg;
 
 	/** persistent field */
-	@Column(name="eventSeverity", nullable=false)
-	private Integer eventSeverity;
+	@Column(name="eventSeverity", nullable=false, length=100)
+	@Enumerated(EnumType.STRING)
+	private OnmsSeverity eventSeverity;
 
 	/** nullable persistent field */
 	@Column(name="ifIndex")
@@ -564,17 +567,22 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
 	 * @return a {@link java.lang.Integer} object.
 	 */
 	@XmlTransient
-	public Integer getEventSeverity() {
+	public OnmsSeverity getEventSeverity() {
 		return eventSeverity;
 	}
 
 	/**
-	 * <p>setEventSeverity</p>
-	 *
 	 * @param severity a {@link java.lang.Integer} object.
+	 * @deprecated Use {@link #setEventSeverity(OnmsSeverity)} instead.
 	 */
+	@Deprecated(forRemoval = true)
 	public void setEventSeverity(Integer severity) {
-		eventSeverity = severity;
+		Objects.requireNonNull(severity);
+		eventSeverity = OnmsSeverity.get(severity);
+	}
+
+	public void setEventSeverity(OnmsSeverity severity) {
+		this.eventSeverity = severity;
 	}
 
     /**
@@ -584,7 +592,7 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
      */
     @XmlAttribute(name="severity")
     public String getSeverityLabel() {
-        return OnmsSeverity.get(eventSeverity).name();
+        return eventSeverity == null ? null : eventSeverity.getLabel();
     }
 
     /**
@@ -592,10 +600,9 @@ public class OnmsEvent extends OnmsEntity implements Serializable {
      *
      * @param label a {@link java.lang.String} object.
      */
-    public void setSeverityLabel(String label) {
-        eventSeverity = OnmsSeverity.get(label).getId();
+    public void setSeverityByLabel(String label) {
+        eventSeverity = OnmsSeverity.get(label);
     }
-
 
 	/**
 	 * <p>getEventPathOutage</p>

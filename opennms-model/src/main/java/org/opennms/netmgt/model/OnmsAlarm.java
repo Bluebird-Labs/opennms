@@ -37,6 +37,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -459,10 +461,9 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
      * @return a {@link org.opennms.netmgt.model.OnmsSeverity} object.
      */
     @Override
-    @Column(name="severity", nullable=false)
-    // @Enumerated(EnumType.ORDINAL)
-    @Type(type="org.opennms.netmgt.model.OnmsSeverityUserType")
+    @Column(name="severity", nullable=false, length=100)
     @XmlTransient
+    @Enumerated(EnumType.STRING)
     public OnmsSeverity getSeverity() {
         return this.m_severity;
     }
@@ -492,7 +493,7 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
      *
      * @param severity a {@link java.lang.Integer} object.
      */
-    public void setSeverityId(final Integer severity) {
+    public void setSeverityById(final Integer severity) {
         this.m_severity = OnmsSeverity.get(severity);
     }
     

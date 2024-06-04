@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opennms.core.criteria.Alias;
@@ -61,10 +60,8 @@ import org.opennms.netmgt.model.OnmsSeverity;
 import org.opennms.netmgt.model.alarm.AlarmSummary;
 import org.opennms.netmgt.model.alarm.SituationSummary;
 import org.opennms.test.JUnitConfigurationEnvironment;
-import org.opennms.test.ThrowableAnticipator;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,7 +121,7 @@ public class AlarmDaoIT implements InitializingBean {
 		event.setEventCreateTime(new Date());
 		event.setDistPoller(m_distPollerDao.whoami());
 		event.setEventTime(new Date());
-		event.setEventSeverity(OnmsSeverity.MAJOR.getId());
+		event.setEventSeverity(OnmsSeverity.MAJOR);
 		event.setEventUei("uei://org/opennms/test/EventDaoTest");
 		event.setEventSource("test");
 		m_eventDao.save(event);
@@ -135,8 +132,8 @@ public class AlarmDaoIT implements InitializingBean {
 
 		alarm.setNode(node);
 		alarm.setUei(event.getEventUei());
-		alarm.setSeverity(OnmsSeverity.get(event.getEventSeverity()));
-		alarm.setSeverityId(event.getEventSeverity());
+		alarm.setSeverity(event.getEventSeverity());
+		alarm.setSeverity(event.getEventSeverity());
 		alarm.setFirstEventTime(event.getEventTime());
 		alarm.setLastEvent(event);
 		alarm.setCounter(1);
@@ -172,7 +169,7 @@ public class AlarmDaoIT implements InitializingBean {
 		event.setEventCreateTime(new Date());
 		event.setDistPoller(m_distPollerDao.whoami());
 		event.setEventTime(new Date());
-		event.setEventSeverity(OnmsSeverity.CRITICAL.getId());
+		event.setEventSeverity(OnmsSeverity.CRITICAL);
 		event.setEventUei("uei://org/opennms/test/EventDaoTest");
 		event.setEventSource("test");
 		m_eventDao.save(event);
@@ -183,7 +180,7 @@ public class AlarmDaoIT implements InitializingBean {
 
 		alarm.setNode(node);
 		alarm.setUei(event.getEventUei());
-		alarm.setSeverityId(event.getEventSeverity());
+		alarm.setSeverity(event.getEventSeverity());
 		alarm.setFirstEventTime(event.getEventTime());
 		alarm.setLastEvent(event);
 		alarm.setCounter(1);
@@ -215,7 +212,7 @@ public class AlarmDaoIT implements InitializingBean {
 		event.setEventCreateTime(new Date());
 		event.setDistPoller(m_distPollerDao.whoami());
 		event.setEventTime(new Date());
-		event.setEventSeverity(OnmsSeverity.CRITICAL.getId());
+		event.setEventSeverity(OnmsSeverity.CRITICAL);
 		event.setEventUei("uei://org/opennms/test/EventDaoTest");
 		event.setEventSource("test");
 		m_eventDao.save(event);
@@ -226,7 +223,7 @@ public class AlarmDaoIT implements InitializingBean {
 
 		alarm.setNode(node);
 		alarm.setUei(event.getEventUei());
-		alarm.setSeverityId(event.getEventSeverity());
+		alarm.setSeverity(event.getEventSeverity());
 		alarm.setFirstEventTime(event.getEventTime());
 		alarm.setLastEvent(event);
 		alarm.setCounter(1);
@@ -252,7 +249,7 @@ public class AlarmDaoIT implements InitializingBean {
 		event.setEventCreateTime(new Date());
 		event.setDistPoller(m_distPollerDao.whoami());
 		event.setEventTime(new Date());
-		event.setEventSeverity(OnmsSeverity.CRITICAL.getId());
+		event.setEventSeverity(OnmsSeverity.CRITICAL);
 		event.setEventUei("uei://org/opennms/test/EventDaoTest");
 		event.setEventSource("test");
 		m_eventDao.save(event);
@@ -262,7 +259,7 @@ public class AlarmDaoIT implements InitializingBean {
 		final OnmsAlarm alarm1 = new OnmsAlarm();
 		alarm1.setNode(node);
 		alarm1.setUei(event.getEventUei());
-		alarm1.setSeverityId(event.getEventSeverity());
+		alarm1.setSeverity(event.getEventSeverity());
 		alarm1.setFirstEventTime(event.getEventTime());
 		alarm1.setLastEvent(event);
 		alarm1.setCounter(1);
@@ -272,7 +269,7 @@ public class AlarmDaoIT implements InitializingBean {
 		final OnmsAlarm alarm2 = new OnmsAlarm();
 		alarm2.setNode(node);
 		alarm2.setUei(event.getEventUei());
-		alarm2.setSeverityId(event.getEventSeverity());
+		alarm2.setSeverity(event.getEventSeverity());
 		alarm2.setFirstEventTime(event.getEventTime());
 		alarm2.setLastEvent(event);
 		alarm2.setCounter(1);
@@ -298,7 +295,7 @@ public class AlarmDaoIT implements InitializingBean {
 		event.setEventCreateTime(new Date());
 		event.setDistPoller(m_distPollerDao.whoami());
 		event.setEventTime(new Date());
-		event.setEventSeverity(OnmsSeverity.CRITICAL.getId());
+		event.setEventSeverity(OnmsSeverity.CRITICAL);
 		event.setEventUei("uei://org/opennms/test/EventDaoTest");
 		event.setEventSource("test");
 		m_eventDao.save(event);
@@ -308,7 +305,7 @@ public class AlarmDaoIT implements InitializingBean {
 		final OnmsAlarm alarm1 = new OnmsAlarm();
 		alarm1.setNode(node);
 		alarm1.setUei(event.getEventUei());
-		alarm1.setSeverityId(event.getEventSeverity());
+		alarm1.setSeverity(event.getEventSeverity());
 		alarm1.setFirstEventTime(event.getEventTime());
 		alarm1.setLastEvent(event);
 		alarm1.setCounter(1);
@@ -319,7 +316,7 @@ public class AlarmDaoIT implements InitializingBean {
 			final OnmsAlarm situation = new OnmsAlarm();
 			situation.setNode(node);
 			situation.setUei(event.getEventUei());
-			situation.setSeverityId(onmsSeverity.getId());
+			situation.setSeverity(onmsSeverity);
 			situation.setFirstEventTime(event.getEventTime());
 			situation.setLastEvent(event);
 			situation.setCounter(1);
@@ -364,7 +361,7 @@ public class AlarmDaoIT implements InitializingBean {
 		OnmsAlarm alarm = new OnmsAlarm();
 		alarm.setNode(node);
 		alarm.setUei("uei://org/opennms/test/badAlarmTest");
-		alarm.setSeverityId(new Integer(7));
+		alarm.setSeverityById(7);
 		alarm.setCounter(1);
 		alarm.setDistPoller(m_distPollerDao.whoami());
 
@@ -404,7 +401,7 @@ public class AlarmDaoIT implements InitializingBean {
 		event.setEventCreateTime(new Date());
 		event.setDistPoller(m_distPollerDao.whoami());
 		event.setEventTime(new Date());
-		event.setEventSeverity(OnmsSeverity.CRITICAL.getId());
+		event.setEventSeverity(OnmsSeverity.CRITICAL);
 		event.setEventUei("uei://org/opennms/test/EventDaoTest");
 		event.setEventSource("test");
 		m_eventDao.save(event);
@@ -415,7 +412,7 @@ public class AlarmDaoIT implements InitializingBean {
 
 		alarm.setNode(node);
 		alarm.setUei(event.getEventUei());
-		alarm.setSeverityId(event.getEventSeverity());
+		alarm.setSeverity(event.getEventSeverity());
 		alarm.setFirstEventTime(event.getEventTime());
 		alarm.setLastEvent(event);
 		alarm.setCounter(1);
@@ -460,7 +457,7 @@ public class AlarmDaoIT implements InitializingBean {
 		OnmsAlarm alarm = new OnmsAlarm();
 		alarm.setNode(node);
 		alarm.setUei(EventConstants.NODE_DOWN_EVENT_UEI);
-		alarm.setSeverityId(OnmsSeverity.CLEARED.getId());
+		alarm.setSeverity(OnmsSeverity.CLEARED);
 		alarm.setCounter(1);
 		alarm.setDistPoller(m_distPollerDao.whoami());
 		m_alarmDao.save(alarm);

@@ -107,7 +107,7 @@ public class SyslogNorthBounderWithFiltersIT extends SyslogNorthBounderIT {
         onmsAlarm.setId(10);
         onmsAlarm.setUei("uei.opennms.org/nodes/interfaceDown");
         onmsAlarm.setNode(node);
-        onmsAlarm.setSeverityId(6);
+        onmsAlarm.setSeverityById(6);
         onmsAlarm.setIpAddr(address);
         onmsAlarm.setCounter(1);
         onmsAlarm.setLogMsg("Interface Down");

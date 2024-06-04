@@ -231,7 +231,7 @@ public class EventControllerTest  {
         OnmsAlarm alarm1 = new OnmsAlarm();
         alarm1.setUei("uei.opennms.org/vendor/Juniper/traps/jnxVpnIfUp");
         alarm1.setLastEvent(getOnmsEvents().get(0));
-        alarm1.setSeverityId(3);
+        alarm1.setSeverityById(3);
         alarm1.setCounter(100);
         alarm1.setLastEvent(getOnmsEvents().get(0));
         alarm1.setLogMsg("testalarm1");
@@ -239,7 +239,7 @@ public class EventControllerTest  {
         OnmsAlarm alarm2 = new OnmsAlarm();
         alarm2.setUei("uei.opennms.org/vendor/Juniper/traps/xyz");
         alarm2.setLastEvent(getOnmsEvents().get(1));
-        alarm2.setSeverityId(2);
+        alarm2.setSeverityById(2);
         alarm2.setCounter(101);
         alarm2.setLastEvent(getOnmsEvents().get(1));
         alarm2.setLogMsg("testalarm2");
